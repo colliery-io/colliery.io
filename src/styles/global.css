@@ -108,14 +108,17 @@
 @layer components {
 	.h1 {
 		@apply text-base-900 dark:text-base-100 text-3xl leading-tight font-bold tracking-tight lg:text-5xl lg:leading-tight;
+		font-family: var(--font-heading);
 	}
 
 	.h2 {
 		@apply text-base-900 dark:text-base-100 text-3xl leading-tight font-bold tracking-tight md:text-4xl;
+		font-family: var(--font-heading);
 	}
 
 	.h3 {
 		@apply text-base-900 dark:text-base-100 text-xl leading-tight font-bold tracking-tight md:text-2xl;
+		font-family: var(--font-heading);
 	}
 
 	.description {
