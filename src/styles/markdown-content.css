@@ -27,6 +27,7 @@
 
 .markdown-content :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)) {
 	@apply text-foreground/95 mt-2 mb-4 text-base leading-normal;
+	font-family: var(--font-heading);
 }
 
 .markdown-content h1:not(:where(.not-content *)) {

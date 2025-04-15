@@ -139,6 +139,7 @@
 	/* styles navbar links */
 	.nav__link--base {
 		@apply text-base-500 hover:text-base-600 dark:text-base-400 dark:hover:text-base-300 leading-tight font-medium transition;
+		font-family: var(--font-heading);
 	}
 }
 
@@ -160,5 +161,10 @@
 	/* use with "animate-pause" to pause a CSS animation */
 	.pause {
 		animation-play-state: paused !important;
+	}
+
+	/* font utility classes */
+	.font-heading {
+		font-family: var(--font-heading);
 	}
 }
