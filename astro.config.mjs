@@ -16,6 +16,15 @@ export default defineConfig({
 	adapter: netlify({
 		imageCDN: false,
 	}),
+	image: {
+		service: {
+			entrypoint: "astro/assets/services/sharp",
+			config: {
+				quality: 100,
+				compressionLevel: 0,
+			},
+		},
+	},
 	redirects: {
 		"/admin": "/keystatic",
 	},

@@ -1,5 +1,4 @@
 ---
-import { Image } from "astro:assets";
 import { Icon } from "astro-icon/components";
 
 // utils
@@ -9,23 +8,19 @@ import { getTranslatedData } from "@js/translationUtils";
 // data
 const currLocale = getLocaleFromUrl(Astro.url);
 const siteData = getTranslatedData("siteData", currLocale);
-
-// images
-import logo from "@images/atlas-logo.png";
 ---
 
 <a
 	class="primary-focus text-base-600 dark:text-base-200 flex items-center gap-2 align-middle text-xl font-bold"
 	href={"/"}
 >
-	<!-- <Image
-    src={logo}
-    alt="Atlas logo"
-    loading="eager"
-    height={90}
-    class="h-10 w-auto"
-    aria-label="Atlas logo"
-  /> -->
-	<Icon name="atlas/logoipsum" class="text-primary-500 size-6" aria-hidden="true" />
-	<p class="">{siteData.name}</p>
+	<img
+		src="/assets/images/branding/colliery-site-logo.png"
+		alt="Colliery logo"
+		loading="eager"
+		width="250"
+		height="auto"
+		class="h-auto w-[250px]"
+		aria-label="Colliery logo"
+	/>
 </a>
