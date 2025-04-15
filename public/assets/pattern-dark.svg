@@ -1,9 +1,9 @@
 <svg width="1440" height="420" viewBox="0 0 1440 420" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g clip-path="url(#clip0_625_10506)">
-    <rect width="1440" height="420" fill="rgb(28, 35, 45)" />
+    <rect width="1440" height="420" fill="oklch(20% 0.01 250)" />
     <g opacity="0.4">
-      <rect width="1440" height="1320" fill="rgb(28, 35, 45)" />
-      <line x1="0.5" y1="-48" x2="0.499969" y2="672" stroke="rgb(44, 53, 68)" />
+      <rect width="1440" height="1320" fill="oklch(20% 0.01 250)" />
+      <line x1="0.5" y1="-48" x2="0.499969" y2="672" stroke="#D5DAE1" />
       <line x1="1464" y1="0.5" x2="-24" y2="0.5" stroke="rgb(44, 53, 68)" />
       <line x1="1464" y1="24.5" x2="-24" y2="24.5" stroke="rgb(44, 53, 68)" />
       <line x1="1464" y1="48.5" x2="-24" y2="48.5" stroke="rgb(44, 53, 68)" />
@@ -88,8 +88,8 @@
   <defs>
     <radialGradient id="paint0_radial_625_10506" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
       gradientTransform="translate(720 210) rotate(90) scale(210 720)">
-      <stop stop-color="rgb(28, 35, 45)" stop-opacity="0" />
-      <stop offset="1" stop-color="rgb(28, 35, 45)" />
+      <stop stop-color="oklch(20% 0.01 250)" stop-opacity="0" />
+      <stop offset="1" stop-color="oklch(20% 0.01 250)" />
     </radialGradient>
     <clipPath id="clip0_625_10506">
       <rect width="1440" height="420" fill="white" />

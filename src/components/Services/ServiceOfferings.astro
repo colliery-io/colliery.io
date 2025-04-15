@@ -1,0 +1,96 @@
+---
+/**
+ * * Service offerings with icons, titles, and descriptions
+ * This looks best with an even number of cards. They are smaller to
+ * use with more cards in the same section. 6 cards is probably ideal
+ */
+
+import { Icon } from "astro-icon/components";
+
+// components
+import FeatureCard from "@components/FeatureCard/FeatureCardSmall.astro";
+import Badge from "@components/Badge/Badge.astro";
+
+interface ServiceData {
+	icon: string;
+	title: string;
+	text: string;
+}
+
+// data
+const serviceData: ServiceData[] = [
+	{
+		icon: "tabler/script",
+		title: "Custom Software Development",
+		text: `Building tailored solutions that solve specific business problems through functional, 
+      reliable, and maintainable systems.`,
+	},
+	{
+		icon: "tabler/category",
+		title: "Enterprise Architecture Design & Review",
+		text: `Designing robust architectures and conducting comprehensive system reviews to ensure 
+      optimal performance, scalability, and maintainability.`,
+	},
+	{
+		icon: "tabler/list-check",
+		title: "Data Engineering & Operations",
+		text: `Implementing and managing data pipelines, ETL processes, and data operations to ensure 
+      high-quality, reliable, and efficient data processing.`,
+	},
+	{
+		icon: "tabler/bulb",
+		title: "ML Engineering & Operationalization",
+		text: `Establishing engineering practices and operational frameworks for ML to optimize workflows, 
+      ensure operational excellence, and enhance team velocity.`,
+	},
+	{
+		icon: "tabler/circle-arrow-up",
+		title: "Infrastructure & DevOps",
+		text: `Designing and implementing cloud infrastructure and DevOps practices to achieve automation, 
+      scalability, and system reliability.`,
+	},
+];
+---
+
+<section
+	id="service-offerings"
+	class="bg-[url('/assets/pattern-light.svg')] bg-center bg-no-repeat py-24 md:py-28 dark:bg-[url('/assets/pattern-dark.svg')]"
+>
+	<div class="site-container relative">
+		<div class="mx-auto mb-16 text-center md:max-w-4xl" data-aos="fade-up">
+			<Badge>Services</Badge>
+			<h2 class="h2 mb-4">Our Service Offerings</h2>
+			<p class="description text-lg text-pretty md:text-xl">
+				Expert software engineering services focused on building functional, reliable systems and improving organizations.
+			</p>
+		</div>
+		<div id="trigger-service-cards" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+			{
+				serviceData.slice(0, 3).map((service, idx) => (
+					<FeatureCard
+						title={service.title}
+						text={service.text}
+						icon={service.icon}
+						data-aos="zoom-in"
+						data-aos-delay={0.15 * idx}
+						data-aos-trigger="#trigger-service-cards"
+					/>
+				))
+			}
+		</div>
+		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 max-w-2xl mx-auto">
+			{
+				serviceData.slice(3).map((service, idx) => (
+					<FeatureCard
+						title={service.title}
+						text={service.text}
+						icon={service.icon}
+						data-aos="zoom-in"
+						data-aos-delay={0.15 * (idx + 3)}
+						data-aos-trigger="#trigger-service-cards"
+					/>
+				))
+			}
+		</div>
+	</div>
+</section> 

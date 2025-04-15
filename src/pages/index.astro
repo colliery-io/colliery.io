@@ -7,7 +7,7 @@ import HeroSideImage from "@components/Hero/HeroSideImage.astro";
 import HeroBgImage from "@components/Hero/HeroBgImage.astro";
 import HeroCentered from "@components/Hero/HeroCentered.astro";
 
-import FeatureCardsSmall from "@components/Feature/FeatureCardsSmall.astro";
+import ServiceOfferings from "@components/Services/ServiceOfferings.astro";
 import FeatureCardsMedium from "@components/Feature/FeatureCardsMedium.astro";
 import FeatureGalleryMarquee from "@components/Feature/FeatureGalleryMarquee.astro";
 import FeatureLightboxMarquee from "@components/Feature/FeatureLightboxMarquee.astro";
@@ -38,15 +38,11 @@ const siteData = getTranslatedData("siteData", currLocale);
 ---
 
 <BaseLayout title={siteData.title} description={siteData.description}>
-	<!-- <HeroSideImage /> -->
-	<!-- <HeroBgImage /> -->
-	 <HeroCentered /> 
+	
+	<HeroCentered /> 
+	<ServiceOfferings />
+	
 
-	<FeatureCardsSmall />
-	<!-- <FeatureVideo /> -->
-
-	<ServicesSideImage />
-	<!-- <ServicesIcon /> -->
 
 	<FeatureCardsMedium />
 	<!-- <FeatureSideImage /> -->
