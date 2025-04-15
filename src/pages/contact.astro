@@ -28,54 +28,10 @@ const siteData = getTranslatedData("siteData", currLocale);
 			</p>
 		</div>
 
-		<div class="grid gap-8 lg:grid-cols-2">
+		<div class="grid gap-8">
 			<!-- contact form -->
-			<div class="mb-12 lg:order-2">
+			<div class="mb-12">
 				<ContactForm />
-			</div>
-
-			<!-- Contact info -->
-			<div class="mb-auto grid gap-x-6 gap-y-12 lg:grid-cols-2">
-				<!-- Email -->
-				<div class="flex flex-col items-center gap-3 lg:items-start">
-					<div
-						class="bg-primary-500 inline-flex size-12 items-center justify-center overflow-hidden rounded-full"
-					>
-						<Icon name="tabler/mail" class="size-6 text-white" />
-					</div>
-					<h3 class="h3">Email</h3>
-					<a href="mailto:example@email.com" class="description hover:text-base-600 transition"
-						>{siteData.contact.email}</a
-					>
-				</div>
-
-				<!-- Phone -->
-				<div class="flex flex-col items-center gap-3 lg:items-start">
-					<div
-						class="bg-primary-500 inline-flex size-12 items-center justify-center overflow-hidden rounded-full"
-					>
-						<Icon name="tabler/phone" class="size-6 text-white" />
-					</div>
-					<h3 class="h3">Phone</h3>
-					<a
-						href={`tel:${siteData.contact.phone}`}
-						class="description hover:text-base-600 transition">{siteData.contact.phone}</a
-					>
-				</div>
-
-				<!-- Address -->
-				<div class="flex flex-col items-center gap-3 lg:items-start">
-					<div
-						class="bg-primary-500 inline-flex size-12 items-center justify-center overflow-hidden rounded-full"
-					>
-						<Icon name="tabler/map-pin" class="size-6 text-white" />
-					</div>
-					<h3 class="h3">Office</h3>
-					<div class="description flex flex-col items-center lg:items-start">
-						<p>{siteData.contact.address1}</p>
-						<p>{siteData.contact.address2}</p>
-					</div>
-				</div>
 			</div>
 		</div>
 	</div>
