@@ -58,20 +58,6 @@ const feedContent = rss({
 	})),
 });
 
-// Write the RSS feed to a file
-export async function getStaticPaths() {
-	return [
-		{
-			params: { slug: "rss.xml" },
-			props: { content: feedContent.xml },
-		},
-	];
-}
-
-const { content } = Astro.props;
----
-{content}
-
 // --------------------------------------------------------
 // map the post author slug to the author name
 const getAuthorName = (authorSlug: string) => {
@@ -118,3 +104,6 @@ const getImageUrl = (post: CollectionEntry<"blog">) => {
 
 	return imageUrl;
 };
+
+---
+{feedContent.xml}
