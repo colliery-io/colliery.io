@@ -8,14 +8,11 @@ import AutoImport from "astro-auto-import";
 import icon from "astro-icon";
 import react from "@astrojs/react";
 import keystatic from "@keystatic/astro";
-import netlify from "@astrojs/netlify";
 
 // https://astro.build/config
 export default defineConfig({
-	site: "https://www.colliery.io",
-	adapter: netlify({
-		imageCDN: false,
-	}),
+	site: "https://colliery-io.github.io/colliery.io",
+	output: "static",
 	image: {
 		service: {
 			entrypoint: "astro/assets/services/sharp",

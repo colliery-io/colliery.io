@@ -56,12 +56,7 @@ def setup():
     # Install dependencies using pnpm
     print("Installing dependencies...")
     subprocess.run(["npm", "install"], cwd=project_root, check=True)
-    
-    # Create necessary directories if they don't exist
-    print("Setting up project structure...")
-    (project_root / "public").mkdir(exist_ok=True)
-    (project_root / "src").mkdir(exist_ok=True)
-    
+        
     print("Development environment setup complete!")
 
 def is_server_running():
