@@ -59,7 +59,9 @@ export default defineConfig({
 				tabler: ['*']
 			}
 		}),
-		keystatic(),
+		keystatic({
+			storage: { kind: "local" }
+		}),
 		sitemap(),
 		compress({
 			HTML: true,

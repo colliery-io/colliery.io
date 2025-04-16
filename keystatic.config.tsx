@@ -23,14 +23,8 @@ export default config({
 	},
 	collections: {
 		blogEN: Collections.Blog("en"),
-
-		// for now there is a limitation with keystatic where relationship fields don't work well with i18n features
-		// If you need multiple languages here (you might not) just create multiple variants of the same author
-		// this might look like "author-1-en" and "author-1-fr"
 		authors: Collections.Authors(""),
-
 		servicesEN: Collections.Services("en"),
-
 		otherPagesEN: Collections.OtherPages("en"),
 	},
 });
