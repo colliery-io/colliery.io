@@ -11,7 +11,7 @@ import keystatic from "@keystatic/astro";
 
 // https://astro.build/config
 export default defineConfig({
-	site: "https://colliery-io.github.io/colliery.io",
+	site: "https://colliery.io",
 	output: "static",
 	image: {
 		service: {

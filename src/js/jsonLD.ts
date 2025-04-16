@@ -64,7 +64,7 @@ export default function jsonLDGenerator(props: JsonLDProps) {
       "@context": "https://schema.org/",
       "@type": "WebSite",
       "name": "${siteData.title}",
-      "url": "${import.meta.env.SITE}"
+      "url": "https://colliery.io"
       }
     </script>`;
 }

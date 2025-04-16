@@ -25,7 +25,7 @@ const feedContent = rss({
 	// `<description>` field in output xml
 	description: siteData.description,
 	// Pull in your project "site" from the endpoint context
-	site: "https://colliery-io.github.io/colliery.io",
+	site: "https://colliery.io",
 	// media is needed for blog posts. recommended to add atom support
 	xmlns: {
 		media: "http://search.yahoo.com/mrss/",
