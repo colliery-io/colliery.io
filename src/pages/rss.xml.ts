@@ -14,7 +14,7 @@ import { getAllPosts } from "@js/blogUtils";
 // you can switch the RSS locale here to something else if desired
 const rssLocale = defaultLocale;
 
-export async function get() {
+export async function getStaticPaths() {
 	// this is needed for getAuthorName() and getAuthorEmail() below
 	const authors: CollectionEntry<"authors">[] = await getCollection("authors");
 
@@ -59,9 +59,18 @@ export async function get() {
 		})),
 	});
 
-	return {
-		body: feedContent.xml,
-	};
+	return [{
+		params: { },
+		props: { content: feedContent.xml }
+	}];
+}
+
+export async function GET({ props }) {
+	return new Response(props.content, {
+		headers: {
+			"Content-Type": "application/xml",
+		},
+	});
 }
 
 // --------------------------------------------------------
