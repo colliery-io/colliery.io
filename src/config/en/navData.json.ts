@@ -125,28 +125,27 @@ const navConfig: navItem[] = [
 	// 	],
 	// },
 
-	// regular dropdown
-	// {
-	// 	text: "Services",
-	// 	dropdown: [
-	// 		{
-	// 			text: "Exterior Painting",
-	// 			link: "/services/exterior-painting",
-	// 		},
-	// 		{
-	// 			text: "Interior Painting",
-	// 			link: "/services/interior-painting",
-	// 		},
-	// 		{
-	// 			text: "Deck and Fence",
-	// 			link: "/services/deck-and-fence-staining",
-	// 		},
-	// 	],
-	// },
-	// {
-	// 	text: "Blog",
-	// 	link: "/blog",
-	// },
+	{
+		text: "Solutions",
+		dropdown: [
+			{
+				text: "Brokkr",
+				link: "/solutions/brokkr",
+			},
+			{
+				text: "Muninn",
+				link: "/solutions/muninn",
+			},
+		],
+	},
+	{
+		text: "Blog",
+		link: "/blog",
+	},
+	{
+		text: "Contact Us",
+		link: "/contact",
+	},
 	// {
 	//   // get the categories used in blog posts, to put into a navbar dropdown
 	//   text: "Categories",

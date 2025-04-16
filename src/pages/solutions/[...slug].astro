@@ -13,25 +13,25 @@ import { filterCollectionByLanguage } from "@js/localeUtils";
 import { defaultLocale } from "@config/siteSettings.json";
 
 export async function getStaticPaths() {
-	const services = await getCollection("services", ({ data }) => {
-		// filter out draft services
+	const solutions = await getCollection("solutions", ({ data }) => {
+		// filter out draft solutions
 		return data.draft !== true;
 	});
 
 	// get rid of pages from other languages and remove locale from slug
-	const filteredServices = filterCollectionByLanguage(services, defaultLocale);
+	const filteredSolutions = filterCollectionByLanguage(solutions, defaultLocale);
 
-	return filteredServices.map((post) => ({
-		params: { slug: post.id },
-		props: post,
+	return filteredSolutions.map((solution) => ({
+		params: { slug: solution.id },
+		props: solution,
 	}));
 }
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
-const service = Astro.props as Props;
-const { Content } = await render(service);
+const solution = Astro.props as Props;
+const { Content } = await render(solution);
 ---
 
-<ServiceLayoutCenter {...service.data}>
+<ServiceLayoutCenter {...solution.data}>
 	<Content components={{ a: ExternalLink }} />
-</ServiceLayoutCenter>
+</ServiceLayoutCenter> 
