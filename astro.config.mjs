@@ -22,9 +22,6 @@ export default defineConfig({
 			},
 		},
 	},
-	redirects: {
-		"/admin": "/keystatic",
-	},
 	// i18n configuration must match src/config/translations.json.ts
 	i18n: {
 		defaultLocale: "en",
@@ -59,9 +56,14 @@ export default defineConfig({
 				tabler: ['*']
 			}
 		}),
-		keystatic({
-			storage: { kind: "local" }
-		}),
+		...(process.env.NODE_ENV === 'development' ? [
+			keystatic({
+				storage: { kind: "local" },
+				mode: "static",
+				cmsPath: "/admin",
+				staticMode: true
+			})
+		] : []),
 		sitemap(),
 		compress({
 			HTML: true,
@@ -77,6 +79,11 @@ export default defineConfig({
 		// stop inlining short scripts to fix issues with ClientRouter
 		build: {
 			assetsInlineLimit: 0,
+		},
+		resolve: {
+			alias: {
+				'@components': '/src/components',
+			},
 		},
 	},
 	// Either remove experimental completely if not using other experimental features,

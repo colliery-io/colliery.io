@@ -17,7 +17,9 @@ import Collections from "@components/KeystaticComponents/Collections";
 
 export default config({
 	// Use local storage for both dev and production
-	storage: { kind: "local" },
+	storage: { 
+		kind: "local",
+	},
 	ui: {
 		brand: { name: "Colliery Software" },
 	},

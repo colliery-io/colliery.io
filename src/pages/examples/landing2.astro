@@ -3,10 +3,10 @@
 import BaseLayout from "@layouts/BaseLayout.astro";
 
 // components
-import Hero from "@components/Hero/HeroBgImage.astro";
+import Hero from "@components/Hero/HeroCentered.astro";
 import Awards from "@components/Awards/Awards.astro";
 import FeatureSideImage from "@components/Feature/FeatureSideImage.astro";
-import ServicesIcon from "@components/Services/ServicesIcon.astro";
+import ServiceOfferings from "@components/Services/ServiceOfferings.astro";
 import FeatureVideo from "@components/Feature/FeatureVideo.astro";
 import TestimonialsColumns from "@components/Testimonials/TestimonialsColumns.astro";
 import FeatureToggleImage from "@components/Feature/FeatureToggleImage.astro";
@@ -26,7 +26,7 @@ const siteData = getTranslatedData("siteData", currLocale);
 	<Hero />
 	<!-- <Awards /> -->
 	<FeatureVideo />
-	<ServicesIcon />
+	<ServiceOfferings />
 	<FeatureSideImage />
 	<TestimonialsColumns />
 	<FeatureToggleImage />
