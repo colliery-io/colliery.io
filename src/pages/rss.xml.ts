@@ -14,49 +14,55 @@ import { getAllPosts } from "@js/blogUtils";
 // you can switch the RSS locale here to something else if desired
 const rssLocale = defaultLocale;
 
-// this is needed for getAuthorName() and getAuthorEmail() below
-const authors: CollectionEntry<"authors">[] = await getCollection("authors");
+export async function get() {
+	// this is needed for getAuthorName() and getAuthorEmail() below
+	const authors: CollectionEntry<"authors">[] = await getCollection("authors");
 
-// Generate the RSS feed content
-const posts = await getAllPosts(rssLocale);
-const feedContent = rss({
-	// `<title>` field in output xml
-	title: siteData.title,
-	// `<description>` field in output xml
-	description: siteData.description,
-	// Pull in your project "site" from the endpoint context
-	site: "https://colliery.io",
-	// media is needed for blog posts. recommended to add atom support
-	xmlns: {
-		media: "http://search.yahoo.com/mrss/",
-		atom: "http://www.w3.org/2005/Atom",
-	},
-	// add atom:link to be compatible with atom
-	customData: `<atom:link href="https://colliery-io.github.io/colliery.io/rss.xml" rel="self" type="application/rss+xml" />`,
-	// items (each post)
-	items: posts.map((post) => ({
-		title: post.data.title,
-		description: post.data.description,
-		pubDate: post.data.pubDate,
-		author: `${getAuthorEmail(post.data.authors[0].id)} (${getAuthorName(
-			post.data.authors[0].id,
-		)})`,
+	// Generate the RSS feed content
+	const posts = await getAllPosts(rssLocale);
+	const feedContent = rss({
+		// `<title>` field in output xml
+		title: siteData.title,
+		// `<description>` field in output xml
+		description: siteData.description,
+		// Pull in your project "site" from the endpoint context
+		site: import.meta.env.SITE,
+		// media is needed for blog posts. recommended to add atom support
+		xmlns: {
+			media: "http://search.yahoo.com/mrss/",
+			atom: "http://www.w3.org/2005/Atom",
+		},
+		// add atom:link to be compatible with atom
+		customData: `<atom:link href="${import.meta.env.SITE}/rss.xml" rel="self" type="application/rss+xml" />`,
+		// items (each post)
+		items: posts.map((post) => ({
+			title: post.data.title,
+			description: post.data.description,
+			pubDate: post.data.pubDate,
+			author: `${getAuthorEmail(post.data.authors[0].id)} (${getAuthorName(
+				post.data.authors[0].id,
+			)})`,
 
-		// custom data example, define in XML tags
-		// this adds the blog post image
-		customData: `<media:content
-          type="image/${post.data.heroImage.format == "jpg" ? "jpeg" : "png"}"
-          width="${post.data.heroImage.width}"
-          height="${post.data.heroImage.height}"
-          medium="image"
-          url="${getImageUrl(post)}" />
-      `,
+			// custom data example, define in XML tags
+			// this adds the blog post image
+			customData: `<media:content
+				type="image/${post.data.heroImage.format == "jpg" ? "jpeg" : "png"}"
+				width="${post.data.heroImage.width}"
+				height="${post.data.heroImage.height}"
+				medium="image"
+				url="${getImageUrl(post)}" />
+			`,
 
-		// Compute RSS link from post `slug`
-		// This example assumes all posts are rendered as `/blog/[slug]` routes
-		link: `/blog/${post.id}/`,
-	})),
-});
+			// Compute RSS link from post `slug`
+			// This example assumes all posts are rendered as `/blog/[slug]` routes
+			link: `/blog/${post.id}/`,
+		})),
+	});
+
+	return {
+		body: feedContent.xml,
+	};
+}
 
 // --------------------------------------------------------
 // map the post author slug to the author name
@@ -99,11 +105,8 @@ const getImageUrl = (post: CollectionEntry<"blog">) => {
 	}
 	// in deployment, imageUrlEnd is correct. Something like "_astro/img-name.hash.jpg"
 	else {
-		imageUrl = "https://colliery-io.github.io/colliery.io" + imageUrlEnd;
+		imageUrl = import.meta.env.SITE + imageUrlEnd;
 	}
 
 	return imageUrl;
 };
-
----
-{feedContent.xml}
