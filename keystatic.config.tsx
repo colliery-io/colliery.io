@@ -16,12 +16,8 @@ import { config } from "@keystatic/core";
 import Collections from "@components/KeystaticComponents/Collections";
 
 export default config({
-	// works in local mode in dev, then cloud mode in prod
-	storage: import.meta.env.DEV === true ? { kind: "local" } : { kind: "cloud" },
-	// cloud deployment is free to sign up (up to 3 users per team)
-	// docs: https://keystatic.com/docs/cloud
-	// create a Keystatic Cloud account here: https://keystatic.cloud/
-	cloud: { project: 'colliery-io/colliery-io' },
+	// Use local storage for both dev and production
+	storage: { kind: "local" },
 	ui: {
 		brand: { name: "Colliery Software" },
 	},
