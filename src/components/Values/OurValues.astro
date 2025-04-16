@@ -1,0 +1,82 @@
+---
+/**
+ * * These are medium cards with icons, titles, and text. With title first
+ * This looks best with 3 or 6 cards
+ *
+ * ! I copy all icons into the src/icons folder and recommend you do the same
+ * ! If the icon is at src/icons/tabler/paint.svg then you put in "tabler/paint"
+ */
+
+// components
+import FeatureCard from "@components/FeatureCard/FeatureCardMedium.astro";
+import Badge from "@components/Badge/Badge.astro";
+
+interface FeatureData {
+	icon: string;
+	title: string;
+	text: string;
+}
+
+// data
+const featureData: FeatureData[] = [
+	{
+		icon: "tabler/tools",
+		title: "Practical",
+		text: `We build software that solves real problems with straightforward solutions.`,
+	},
+	{
+		icon: "tabler/scale",
+		title: "Balanced",
+		text: `We weigh competing priorities to make sound decisions that work in practice.`,
+	},
+	{
+		icon: "tabler/microscope",
+		title: "Deep",
+		text: `We dig beneath surface issues to understand root causes and create lasting solutions.`,
+	},
+	{
+		icon: "tabler/messages",
+		title: "Honest",
+		text: `We communicate directly about challenges and capabilities, building trust through transparency.`,
+	},
+	{
+		icon: "tabler/clock-hour-4",
+		title: "Enduring",
+		text: `We build solutions designed to last, focusing on longevity rather than temporary fixes.`,
+	},
+	{
+		icon: "tabler/checklist",
+		title: "Deliberate",
+		text: `We value precision over speed, ensuring our choices are well-reasoned and purposeful.`,
+	},
+];
+---
+
+<section
+	id="our-values"
+	class="overflow-hidden bg-[url('/assets/pattern-light.svg')] bg-center bg-no-repeat py-12 md:py-20 dark:bg-[url('/assets/pattern-dark.svg')]"
+>
+	<div class="site-container">
+		<div class="mx-auto mb-16 text-center md:max-w-4xl" data-aos="fade-up">
+			<Badge>Values</Badge>
+			<h2 class="h2 mb-4">Our Guiding Principles</h2>
+			<p class="description text-lg text-pretty md:text-xl">
+				These principles shape how we approach every project and decision.
+			</p>
+		</div>
+		<div id="trigger-values-cards" class="grid gap-4 md:grid-cols-3" data-aos="fade-left">
+			{
+				featureData.map((feature, idx) => (
+					<FeatureCard
+						title={feature.title}
+						text={feature.text}
+						icon={feature.icon}
+						data-aos="zoom-in"
+						data-aos-delay={0.15 * idx}
+						data-aos-trigger="#trigger-values-cards"
+					/>
+				))
+			}
+		</div>
+	</div>
+</section>

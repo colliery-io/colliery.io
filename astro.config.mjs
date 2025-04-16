@@ -57,7 +57,11 @@ export default defineConfig({
 		}),
 		mdx(),
 		react(),
-		icon(),
+		icon({
+			include: {
+				tabler: ['*']
+			}
+		}),
 		keystatic(),
 		sitemap(),
 		compress({
