@@ -7,8 +7,6 @@
 <section id="contact" class="mx-auto max-w-3xl min-w-fit rounded-lg">
 	<form 
 		id="contact-form" 
-		action="https://getform.io/f/bllydedb" 
-		method="POST" 
 		class="flex flex-col gap-4"
 	>
 		<div class="flex flex-col">
@@ -66,3 +64,34 @@
 		</button>
 	</form>
 </section>
+
+<script>
+	const form = document.getElementById('contact-form');
+	
+	form.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		
+		const formData = new FormData(form);
+		const data = Object.fromEntries(formData.entries());
+		
+		try {
+			const response = await fetch('https://getform.io/f/bllydedb', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(data),
+			});
+			
+			if (response.ok) {
+				form.reset();
+				alert('Message sent successfully!');
+			} else {
+				throw new Error('Failed to send message');
+			}
+		} catch (error) {
+			console.error('Error:', error);
+			alert('Failed to send message. Please try again later.');
+		}
+	});
+</script>
