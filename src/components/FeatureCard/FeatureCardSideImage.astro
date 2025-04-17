@@ -18,7 +18,7 @@ interface Props {
 	title: string; // larger title
 	items: string[]; // list of items that will have check marks next to
 	href: string; // link to learn more
-	image: ImageMetadata; // an imported image
+	image?: ImageMetadata; // an imported image (optional)
 	imageSide: "left" | "right";
 	idx: number; // determines which "blob" icon svg to use. There are 4 options (0-3)
 	rest?: any; // catch-all for any additional parameters, such as "aria-label"
@@ -62,28 +62,32 @@ const currLocale = getLocaleFromUrl(Astro.url);
 	</div>
 
 	<!-- image -->
-	<div class="relative mx-auto max-w-4xl">
-		<Icon
-			name="atlas/circle3"
-			class:list={[
-				"absolute -top-4 -left-8 z-10 size-20 md:-top-8 md:size-28",
-				imageSide === "right" ? "text-accent-1" : "text-accent-4 rotate-90",
-			]}
-			aria-hidden="true"
-		/>
-		<Icon
-			name="atlas/dots3"
-			class:list={[
-				"text-accent-2 absolute -right-7 -bottom-4 z-10 h-auto w-20 md:-bottom-8 md:w-28",
-				imageSide === "right" ? "text-accent-2" : "text-accent-3",
-			]}
-			aria-hidden="true"
-		/>
-		<Image
-			class="relative rounded-xl border border-transparent object-cover"
-			src={image}
-			alt={title}
-			height={700}
-		/>
-	</div>
+	{
+		image && (
+			<div class="relative mx-auto max-w-4xl">
+				<Icon
+					name="atlas/circle3"
+					class:list={[
+						"absolute -top-4 -left-8 z-10 size-20 md:-top-8 md:size-28",
+						imageSide === "right" ? "text-accent-1" : "text-accent-4 rotate-90",
+					]}
+					aria-hidden="true"
+				/>
+				<Icon
+					name="atlas/dots3"
+					class:list={[
+						"text-accent-2 absolute -right-7 -bottom-4 z-10 h-auto w-20 md:-bottom-8 md:w-28",
+						imageSide === "right" ? "text-accent-2" : "text-accent-3",
+					]}
+					aria-hidden="true"
+				/>
+				<Image
+					class="relative rounded-xl border border-transparent object-cover"
+					src={image}
+					alt={title}
+					height={700}
+				/>
+			</div>
+		)
+	}
 </div>

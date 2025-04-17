@@ -203,4 +203,15 @@ def clean():
     # Recreate the dev directory
     DEV_DIR.mkdir(exist_ok=True)
     
-    print("Clean complete!") 
+    print("Clean complete!")
+
+@dev()
+@angreal.command(name="build", about="Build the project locally")
+def build():
+    """
+    Build the project locally for testing purposes.
+    """
+    project_root = Path(root).parent
+    print("Building project...")
+    subprocess.run(["npm", "run", "build"], cwd=project_root, check=True)
+    print("Build complete!") 

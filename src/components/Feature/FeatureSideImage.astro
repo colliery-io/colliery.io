@@ -9,13 +9,8 @@ import { Icon } from "astro-icon/components";
 import FeatureCard from "@components/FeatureCard/FeatureCardSideImage.astro";
 import Badge from "@components/Badge/Badge.astro";
 
-// images
-import image1 from "@images/paint-swatches.jpg";
-import image2 from "@images/living-room.jpg";
-
 interface FeatureItem {
 	badge: string; // badge text
-	image: ImageMetadata; // an imported image
 	title: string;
 	items: string[]; // list of items that will have check marks next to
 	href: string; // link to learn more
@@ -25,7 +20,6 @@ interface FeatureItem {
 const featureData: FeatureItem[] = [
 	{
 		badge: "Features",
-		image: image1,
 		title: "Highest quality painting services",
 		items: [
 			"Professional painters with years of experience.",
@@ -36,7 +30,6 @@ const featureData: FeatureItem[] = [
 	},
 	{
 		badge: "Features",
-		image: image2,
 		title: "Guaranteed satisfaction",
 		items: [
 			"Professional painters with years of experience.",
@@ -60,7 +53,6 @@ const featureData: FeatureItem[] = [
 						badge={feature.badge}
 						title={feature.title}
 						items={feature.items}
-						image={feature.image}
 						imageSide={idx % 2 === 0 ? "right" : "left"}
 						href={feature.href}
 						idx={idx}

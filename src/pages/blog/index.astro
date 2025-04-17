@@ -4,7 +4,6 @@ import BaseLayout from "@layouts/BaseLayout.astro";
 
 // components
 import PostCard from "@components/PostCard/PostCardAtlas.astro";
-import CategoryCloud from "@components/CategoryCloud/CategoryCloud.astro";
 import Badge from "@components/Badge/Badge.astro";
 
 // utils
@@ -30,10 +29,6 @@ const posts = await getAllPosts(currLocale);
 				<h1 class="h1 text-center">
 					Our learning, shared
 				</h1>
-			</div>
-
-			<div class="mt-20 flex pb-8 md:mt-28">
-				<CategoryCloud />
 			</div>
 		</div>
 

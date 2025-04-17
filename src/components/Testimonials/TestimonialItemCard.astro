@@ -18,7 +18,11 @@ const { avatar, name, title, testimonial, ...rest } = Astro.props as Testimonial
 >
 	<p class="dark:text-base-100 text-lg font-medium">{testimonial}</p>
 	<div class="mt-8 flex items-center gap-4">
-		<Image src={avatar} alt={name} height={100} class="size-12 rounded-full object-cover" />
+		{
+			avatar && (
+				<Image src={avatar} alt={name} height={100} class="size-12 rounded-full object-cover" />
+			)
+		}
 		<div>
 			<p class="dark:text-base-100 font-semibold">{name}</p>
 			<p class="text-base-500 dark:text-base-400">{title}</p>
