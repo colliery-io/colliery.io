@@ -9,7 +9,6 @@ import { Icon } from "astro-icon/components";
 // components
 import Badge from "@components/Badge/Badge.astro";
 
-import videoPlaceholder from "@assets/images/house.jpg";
 import video from "@videos/placeholder-space.mp4";
 ---
 
@@ -30,30 +29,24 @@ import video from "@videos/placeholder-space.mp4";
 					aria-label="play video"
 					id="feature-video__play-button"
 				>
-					<Image
-						src={videoPlaceholder}
-						alt="logo"
-						loading="lazy"
-						height={1200}
-						class="z-10 mx-auto rounded-2xl"
-					/>
-
-					<div class="absolute top-0 left-0 m-auto flex h-full w-full items-center justify-center">
-						<div class="relative m-auto aspect-square h-[20%] max-h-16">
-							<!-- background glow of play button -->
-							<div
-								class="bg-primary-500/70 absolute inset-2 z-10 rounded-full motion-safe:animate-ping"
-							>
-							</div>
-							<!-- play button -->
-							<div
-								class="bg-primary-500 group-hover:bg-primary-600 xs:p-4 relative z-20 h-full w-full rounded-full p-2 transition-all duration-300"
-							>
-								<Icon
-									name="tabler/player-play"
-									class="text-base-50 m-auto aspect-square h-full w-full"
-									aria-hidden="true"
-								/>
+					<div class="z-10 mx-auto h-[600px] w-full rounded-2xl bg-gray-200 dark:bg-gray-800">
+						<div class="flex h-full items-center justify-center">
+							<div class="relative m-auto aspect-square h-[20%] max-h-16">
+								<!-- background glow of play button -->
+								<div
+									class="bg-primary-500/70 absolute inset-2 z-10 rounded-full motion-safe:animate-ping"
+								>
+								</div>
+								<!-- play button -->
+								<div
+									class="bg-primary-500 group-hover:bg-primary-600 xs:p-4 relative z-20 h-full w-full rounded-full p-2 transition-all duration-300"
+								>
+									<Icon
+										name="tabler/player-play"
+										class="text-base-50 m-auto aspect-square h-full w-full"
+										aria-hidden="true"
+									/>
+								</div>
 							</div>
 						</div>
 					</div>

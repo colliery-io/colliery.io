@@ -1,15 +1,8 @@
 import { type TestimonialItem } from "../types/configDataTypes";
 
-import BowTiedFocus from "@images/BowTiedFocus.jpg";
-import TravisB from "@images/travis-b.png";
-import Isaac from "@images/isaac_saas.jpg";
-import Aniket from "@images/aniket_p.jpg";
-import David from "@images/david-g-davedev.png";
-import Damiano from "@images/damiano.jpg";
-
 export const testimonialData: TestimonialItem[] = [
 	{
-		avatar: Aniket,
+		avatar: "",
 		name: "Aniket P",
 		title: "Data Scientist",
 		testimonial: `I'm not a front-end dev, but I wanted to rebuild my personal site with Astro. If you're in the same shoes,
@@ -17,7 +10,7 @@ export const testimonialData: TestimonialItem[] = [
       `,
 	},
 	{
-		avatar: BowTiedFocus,
+		avatar: "",
 		name: "BowTiedFocus",
 		title: "Frontend Engineer",
 		testimonial: `The Blogsmith Pro theme is ridiculously well put together and documented.
@@ -26,7 +19,7 @@ export const testimonialData: TestimonialItem[] = [
       `,
 	},
 	{
-		avatar: Damiano,
+		avatar: "",
 		name: "Damiano L",
 		title: "C++ Developer",
 		testimonial: `Cosmic Themes provides some of the best Astro themes out there. They are well designed, easy to customize and, 
@@ -34,7 +27,7 @@ export const testimonialData: TestimonialItem[] = [
       `,
 	},
 	{
-		avatar: David,
+		avatar: "",
 		name: "David G",
 		title: "Web Developer",
 		testimonial: `It's the cleanest template standup experience ever! I've never used Astro, but looking at the demo, code, it
@@ -42,7 +35,7 @@ export const testimonialData: TestimonialItem[] = [
       `,
 	},
 	{
-		avatar: TravisB,
+		avatar: "",
 		name: "Travis B",
 		title: "Developer",
 		testimonial: `Cosmic themes are for webdevs and marketers who don't want to waste time reinventing the wheel. 
@@ -50,7 +43,7 @@ export const testimonialData: TestimonialItem[] = [
       `,
 	},
 	{
-		avatar: Isaac,
+		avatar: "",
 		name: "Isaac",
 		title: "SaaS Developer",
 		testimonial: `My step-dad is starting a construction business and we're looking through Astro themes right now for his website
