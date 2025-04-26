@@ -1,6 +1,6 @@
 ---
 title: Brokkr
-description: Environment Aware Control Plane for Kubernetes
+description: Automate Your Infrastructure, Monitor Your Craft
 draft: false
 image: ./architecture.png
 categories:
@@ -8,50 +8,76 @@ categories:
 ---
 
 
-## What is Brokkr?
+# Brokkr
 
-Brokkr is an environment-aware control plane that dynamically distributes Kubernetes objects across multiple clusters based on real-time conditions. It enables infrastructure teams to define resource stacks and intelligently deploy
-them according to policies, environmental factors, and cluster capabilities.
+**Automate Your Infrastructure. Monitor Your Craft.**
 
---- 
+**Brokkr** is your always-on workshop foreman — managing infrastructure state, watching for drift, and keeping your clusters in line with your desired configuration. Designed for teams that build, scale, and operate real-world systems, Brokkr delivers robust state reconciliation for Kubernetes, driven by code.
 
-## Key Features:
-- Dynamic Resource Distribution: Deploy workloads to the right clusters based on policy definitions and real-time conditions
-- Centralized Multi-Cluster Management: Control numerous Kubernetes environments from a single pane of glass
-- Intelligent Policy Engine: Automatically route resources based on fully customizable policy definitions
-- Lightweight Agent Architecture: Non-intrusive agents connect your clusters while maintaining their autonomy
-- GitOps Compatible: Integrate with existing CI/CD pipelines and version control workflows
-- Comprehensive API: RESTful interfaces for seamless integration with your existing tools
+[Get Started with Brokkr →](https://github.com/colliery-io/brokkr)
 
-## Benefits:
-- Reduce Operational Complexity: Manage multiple environments with consistent policies and automation
-- Improve Deployment Reliability: Test once, deploy anywhere with environment-specific configurations handled automatically
-- Enable Advanced Deployment Patterns: Support for red-black, canary, and progressive rollouts across environments
-- Enhance Security & Compliance: Enforce consistent policies across all clusters with comprehensive audit trails
-- Scale With Confidence: Add new environments or clusters without multiplying management overhead
+---
 
-## Use Cases:
-- Multi-environment management (dev/staging/prod, regional deployments)
-- Edge computing and distributed systems
-- Hybrid cloud orchestration
-- Deployment automation with advanced patterns
-- Configuration and compliance management
-- Platform orchestration and lifecycle management for distributed applications
+## Use Cases
+
+- **Declarative Infrastructure Control**  
+  Define your system state in code and let Brokkr enforce it continuously.
+
+- **Continuous Drift Detection**  
+  Identify and correct unintended changes in your systems before they cause downtime.
+
+- **Simplified Operations at Scale**  
+  Empower small teams to manage large clusters with less manual intervention and higher reliability.
+
+---
+
+## Key Features
+
+- **Rust-Powered Kubernetes Controller**  
+  High-performance, reliable, and memory-safe infrastructure operator.
+
+- **State-Driven Reconciliation**  
+  Brokkr watches your declared state and makes the actual state match — every time.
+
+- **Lightweight, Extensible Core**  
+  Focused on doing one thing well: maintaining your desired system state with minimal overhead.
+
+---
 
 ## Get Started
 
-Brokkr is open source and available on GitHub: [github.com/colliery-io/brokkr](https://github.com/colliery-io/brokkr)
+- **Define Your Resources**  
+  Use Brokkr's custom resources to define what your services, agents, or jobs should look like.
 
-### License
+- **Run the Controller**  
+  Deploy Brokkr into your cluster and let it take charge of drift detection and correction.
 
-Brokkr is provided under the Elastic License 2.0 (ELv2). This license allows for free use, modification, and distribution of the software, but with some important restrictions:
+- **Extend with Crates**  
+  Build on Brokkr’s library foundation to add your own logic and operators.
 
-- Commercial use is permitted, but requires a commercial license for production deployments
-- You may not provide the software as a managed service
-- You may not circumvent the license key functionality
-- You may not remove or alter any license notices
+---
 
-### Commercial Use
+## Why Brokkr?
 
-For commercial entities interested in using Brokkr, please [contact us](/contact) for pricing and licensing information. We offer flexible commercial licenses tailored to your organization's needs.
+In Norse mythology, Brokkr is the smith who forged tools for the gods. In our world, **Brokkr** is the engine that forges reliability into your systems. It’s a durable, developer-first solution for managing infrastructure over time — not just during provisioning.
 
+Where configuration drifts and manual patching lead to entropy, Brokkr brings precision, repeatability, and resilience.
+
+---
+
+## Built for the Operator
+
+At Colliery, we build tools that work as hard as the people who use them. Brokkr is made for platform engineers, SREs, and developers who live close to the metal.
+
+It doesn’t just provision. It watches. It corrects. It protects.
+
+**State, enforced. Drift, resolved.**
+
+[ Start Forging with Brokkr → ](https://github.com/colliery-io/brokkr)
+
+--- 
+
+## Commercial Use
+
+For commercial entities interested in using Brokkr, please [contact us](https://colliery.io/contact/) for pricing and licensing information. 
+We offer flexible commercial licenses tailored to your organization’s needs.
