@@ -132,6 +132,10 @@ const navConfig: navItem[] = [
 				text: "Brokkr",
 				link: "/solutions/brokkr",
 			},
+			{
+				text: "Angreal",
+				link: "/solutions/angreal",
+			},
 			// {
 			// 	text: "Muninn",
 			// 	link: "/solutions/muninn",
