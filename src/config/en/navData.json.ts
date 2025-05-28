@@ -136,6 +136,10 @@ const navConfig: navItem[] = [
 				text: "Angreal",
 				link: "/solutions/angreal",
 			},
+			{
+				text: "Cloacina",
+				link: "/solutions/cloacina",
+			}
 			// {
 			// 	text: "Muninn",
 			// 	link: "/solutions/muninn",
