@@ -1,0 +1,483 @@
+---
+title: Flexible Database Support in Rust with Diesel
+description: A practical guide to implementing flexible database support in Rust applications using Diesel ORM
+draft: false
+authors:
+  - colliery-actual
+pubDate: 2024-03-19
+heroImage: ./hero-image.jpg
+categories:
+  - rust
+  - database
+  - architecture
+  - diesel
+---
+
+
+While not every application needs to support multiple database backends, there are cases where this flexibility becomes valuable - whether for local development, deployment options, or gradual migration paths. However, this seemingly straightforward requirement quickly reveals complex technical challenges around type systems, query compatibility, and maintaining consistent behavior across different databases.
+
+This post shares our experiments with a demo project that explores using compile-time feature flags to support both PostgreSQL and SQLite, along with the key design decisions and patterns we worked with.
+
+## The Challenge: Type Systems and Database Differences
+
+The fundamental challenge isn't just about different database types—it's about how Rust's strict type system and Diesel's ORM layer interact with these differences. Diesel enforces type safety at compile time, which means we need to handle database-specific types in a way that satisfies both Rust's type checker and Diesel's ORM requirements:
+
+- **UUIDs**: PostgreSQL has native UUID support, SQLite stores them as BLOB or TEXT
+- **Timestamps**: PostgreSQL uses rich timestamp types, SQLite uses TEXT or INTEGER
+- **Booleans**: PostgreSQL has native BOOLEAN, SQLite uses INTEGER (0/1)
+- **Binary Data**: PostgreSQL uses BYTEA, SQLite uses BLOB (this one's actually similar!)
+
+Our demo application showcases how to handle these differences while maintaining type safety through Diesel's ORM layer.
+
+## Design Decision 1: Compile-Time Backend Selection
+
+Our first major decision was **when** to choose the backend. We considered two approaches:
+
+### Option A: Runtime Selection
+```rust
+enum DatabaseConnection {
+    Sqlite(SqliteConnection),
+    Postgres(PgConnection),
+}
+```
+
+**Pros**: Single binary supports both databases
+**Cons**: Runtime overhead from enum matching and trait objects, more complex unified schemas
+
+### Option B: Compile-Time Selection  
+```bash
+cargo build --features postgres    # PostgreSQL build
+cargo build --features sqlite      # SQLite build
+```
+
+**Pros**: Zero runtime overhead, simpler reasoning, database-specific optimizations
+**Cons**: Separate binaries for each backend
+
+**We chose Option B** because:
+- Our application had a unified data model with no need for runtime database switching
+
+- Simpler code organization with clear database-specific paths
+
+## Design Decision 2: The DAL Pattern
+
+We explored several architectural approaches to minimize code duplication:
+
+### Evolution 1: Conditional Compilation Everywhere
+Our first attempt mixed shared code with database-specific paths:
+
+```rust
+// Shared validation logic
+fn validate_user(new_user: &NewUser) -> Result<()> {
+    if new_user.email.is_empty() {
+        return Err(Error::InvalidEmail);
+    }
+    Ok(())
+}
+
+// Scattered conditional compilation at DAL level
+fn create_user(conn: &mut DbConnection, new_user: NewUser) -> Result<String> {
+    validate_user(&new_user)?;
+    
+    #[cfg(feature = "sqlite")]
+    {
+        let user_id = UniversalUuid::new_v4();
+        diesel::insert_into(users)
+            .values((id.eq(&user_id), /* ... other fields ... */))
+            .execute(conn)?;
+        Ok(user_id.to_string())
+    }
+    
+    #[cfg(feature = "postgres")]
+    {
+        let user: User = diesel::insert_into(users)
+            .values((/* ... fields ... */))
+            .get_result(conn)?;  // PostgreSQL returns the inserted row
+        Ok(user.id.to_string())
+    }
+}
+
+// More scattered conditionals with actual queries
+fn get_user_by_email(conn: &mut DbConnection, email: &str) -> Result<User> {
+    #[cfg(feature = "sqlite")]
+    {
+        users::table
+            .filter(users::email.eq(email))
+            .first::<User>(conn)
+            .map_err(Into::into)
+    }
+    
+    #[cfg(feature = "postgres")]
+    {
+        // Identical query, but needs to be duplicated
+        users::table
+            .filter(users::email.eq(email))
+            .first::<User>(conn)
+            .map_err(Into::into)
+    }
+}
+```
+
+**Problems**: 
+- Shared validation logic worked well
+- But database-specific operations were scattered throughout the DAL
+- Constant "type checker whack-a-mole" trying to satisfy both backends' type requirements
+- Unclear which methods could be shared vs needed to be database-specific
+- Hard to maintain as the application grew
+- Each new method required careful consideration of type compatibility
+
+### Evolution 2: Separate DAL Modules
+After playing type checker whack-a-mole for a while, we decided to get dumb. Instead of trying to be clever with shared code, we just separated the implementations. It wasn't until later that we realized we'd accidentally implemented the Strategy pattern:
+
+```rust
+// Common trait defining our database strategy
+pub trait UserDAL {
+    type Connection;
+    fn create_user(conn: &mut Self::Connection, new_user: NewUser) -> Result<String>;
+    // ... other methods
+}
+
+// Concrete strategy for PostgreSQL
+pub struct PostgresDAL;
+impl UserDAL for PostgresDAL { /* ... */ }
+
+// Concrete strategy for SQLite  
+pub struct SqliteDAL;
+impl UserDAL for SqliteDAL { /* ... */ }
+
+// Strategy selection at compile time
+#[cfg(feature = "postgres")]
+use postgres_dal::PostgresDAL as DAL;
+#[cfg(feature = "sqlite")]
+use sqlite_dal::SqliteDAL as DAL;
+```
+
+**Benefits**: 
+- Clean separation of database-specific code
+- Easy to understand and maintain
+- No more type checker whack-a-mole
+- Each implementation can be optimized for its database
+
+**Con**: 
+- Some code duplication between implementations
+- But hey, sometimes duplication is better than the wrong abstraction
+
+## Design Decision 3: Universal Wrapper Types
+
+Instead of using conditional compilation in our models, we created wrapper types that work seamlessly with both backends. This approach eliminates the need for database-specific model definitions while maintaining type safety.
+
+Diesel uses the `ToSql` and `FromSql` traits to define how Rust types map to database types. Our UniversalUuid type implements these traits for both SQLite (as BLOB) and PostgreSQL (as native UUID).
+
+### Universal UUID Wrapper
+```rust
+/// Universal UUID wrapper that works with both PostgreSQL and SQLite
+#[derive(Debug, Clone, Copy, FromSqlRow, Hash, Eq, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "sqlite", derive(AsExpression))]
+#[cfg_attr(feature = "sqlite", diesel(sql_type = Binary))]
+#[cfg_attr(feature = "postgres", derive(AsExpression))]
+#[cfg_attr(feature = "postgres", diesel(sql_type = diesel::sql_types::Uuid))]
+pub struct UniversalUuid(pub Uuid);
+
+// SQLite implementation: convert UUID to/from BLOB
+#[cfg(feature = "sqlite")]
+impl ToSql<Binary, Sqlite> for UniversalUuid {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Sqlite>) -> serialize::Result {
+        out.set_value(self.0.as_bytes().to_vec());
+        Ok(IsNull::No)
+    }
+}
+
+#[cfg(feature = "sqlite")]
+impl FromSql<Binary, Sqlite> for UniversalUuid {
+    fn from_sql(bytes: <Sqlite as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
+        let bytes = <Vec<u8> as FromSql<Binary, Sqlite>>::from_sql(bytes)?;
+        if bytes.len() != 16 {
+            return Err("Invalid UUID byte length".into());
+        }
+        let uuid = Uuid::from_slice(&bytes)?;
+        Ok(UniversalUuid(uuid))
+    }
+}
+
+// PostgreSQL implementation: use native UUID type
+#[cfg(feature = "postgres")]
+impl ToSql<diesel::sql_types::Uuid, Pg> for UniversalUuid {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+        <Uuid as ToSql<diesel::sql_types::Uuid, Pg>>::to_sql(&self.0, out)
+    }
+}
+
+#[cfg(feature = "postgres")]
+impl FromSql<diesel::sql_types::Uuid, Pg> for UniversalUuid {
+    fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
+        let uuid = <Uuid as FromSql<diesel::sql_types::Uuid, Pg>>::from_sql(bytes)?;
+        Ok(UniversalUuid(uuid))
+    }
+}
+```
+
+This approach stores UUIDs as 16-byte BLOBs in SQLite (saving 55% storage space vs strings) while using native UUID types in PostgreSQL.
+
+### Timestamp Wrapper
+```rust
+#[cfg(feature = "sqlite")]
+pub struct UniversalTimestamp(pub DateTime<Utc>);
+
+#[cfg(feature = "postgres")]
+pub type UniversalTimestamp = DateTime<Utc>;
+
+// Tell Diesel how to convert our timestamp to SQLite's TEXT format
+#[cfg(feature = "sqlite")]
+impl ToSql<Text, Sqlite> for UniversalTimestamp {
+    fn to_sql(&self, out: &mut Output<Sqlite>) -> serialize::Result {
+        out.set_value(self.0.to_rfc3339());
+        Ok(IsNull::No)
+    }
+}
+
+// Tell Diesel how to convert SQLite's TEXT back to our timestamp
+#[cfg(feature = "sqlite")]
+impl FromSql<Text, Sqlite> for UniversalTimestamp {
+    fn from_sql(value: SqliteValue) -> deserialize::Result<Self> {
+        let s = <String>::from_sql(value)?;
+        Ok(UniversalTimestamp(DateTime::parse_from_rfc3339(&s)?.with_timezone(&Utc)))
+    }
+}
+```
+
+The wrapper serializes to RFC3339 strings for SQLite while maintaining native timestamp types for PostgreSQL. This gives us consistent timestamp handling across both backends while satisfying Diesel's type system requirements.
+
+## Code Duplication: When "Boring" Wins
+
+After implementing the wrapper types and separate DALs, we had a moment of clarity: **the duplication wasn't that bad**. Even with a complex schema (15+ UUID fields, 20+ timestamp fields), we're talking about maybe 200-300 lines of duplicated code.
+
+We briefly considered being clever with macros (proc macros are great, proc macros suck) but quickly rejected it - debugging generated code is a special kind of hell. The "boring" solution of separate DALs won because it kept the complexity where it belonged - in the database-specific code.
+
+## Putting It All Together
+
+Here's how everything works in practice:
+
+First, we configure which database we want to use through Cargo features. This controls which Diesel features and types are available at compile time:
+
+```toml
+[features]
+default = ["sqlite"]
+sqlite = ["diesel/sqlite", "diesel/returning_clauses_for_sqlite_3_35"]
+postgres = ["diesel/postgres", "diesel/uuid"]
+```
+
+Next, we define our models using universal wrapper types. No more conditional compilation needed:
+
+```rust
+#[derive(Debug, Queryable, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::users)]
+pub struct User {
+    pub id: UniversalUuid,  // Works for both backends!
+    pub name: String,
+    pub email: String,
+    pub created_at: UniversalTimestamp,
+    pub is_active: bool,  // Diesel handles boolean conversion
+    pub avatar: Option<Vec<u8>>,  // Binary data works the same
+}
+```
+
+The key insight is that by implementing the appropriate traits for both backends, UniversalUuid can seamlessly work with either database without requiring conditional compilation in the model definition.
+
+Then we implement our DAL methods for each database. Here's how they differ:
+
+PostgreSQL can return the inserted row directly:
+
+```rust
+fn create_user(conn: &mut PgConnection, new_user: NewUser) -> Result<String> {
+    let user: User = diesel::insert_into(users)
+        .values((
+            name.eq(&new_user.name),
+            email.eq(&new_user.email),
+            is_active.eq(&new_user.is_active),
+        ))
+        .get_result(conn)?;  // PostgreSQL returns the inserted row
+    Ok(user.id.to_string())
+}
+```
+
+While SQLite needs manual ID generation and doesn't return the row:
+
+```rust
+fn create_user(conn: &mut SqliteConnection, new_user: NewUser) -> Result<String> {
+    let user_id = UniversalUuid::new_v4();  // Manual UUID generation
+    diesel::insert_into(users)
+        .values((
+            id.eq(&user_id),
+            name.eq(&new_user.name),
+            email.eq(&new_user.email),
+            is_active.eq(&new_user.is_active),
+            created_at.eq(&current_timestamp()),  // Manual timestamp
+        ))
+        .execute(conn)?;  // SQLite doesn't return inserted row
+    Ok(user_id.to_string())
+}
+```
+
+Finally, and most importantly, the application code stays clean and database-agnostic. This is the whole point of our approach - we take on the complexity of handling different databases so our users don't have to:
+
+```rust
+// Application code is identical regardless of backend
+let mut conn = establish_connection()?;
+DAL::create_tables(&mut conn)?;
+let user_id = DAL::create_user(&mut conn, new_user)?;
+let user = DAL::get_user_by_id(&mut conn, &user_id)?;
+```
+
+All the complexity of UUID handling, timestamp conversions, and database-specific quirks is hidden behind our DAL interface. Users of our library don't need to know or care which database they're using - they just write their application code once, and it works with either backend. (Now that i've said that i'm sure edge cases are going to start popping up, but who doesn't love to live dangerously !)
+
+
+## Testing Strategy
+
+We have two main types of tests:
+
+### Backend-Agnostic Tests
+
+These tests are especially important because they validate that both backends behave identically, even though their implementations are different. For example, PostgreSQL returns inserted rows directly while SQLite needs manual ID generation, but the end result should be the same:
+
+```rust
+#[test]
+fn test_create_and_retrieve_user() -> Result<()> {
+    let mut conn = establish_test_connection()?;
+    ActiveDAL::create_tables(&mut conn)?;
+    
+    let new_user = NewUser {
+        name: "Test User".to_string(),
+        email: "test@example.com".to_string(),
+        is_active: true,
+        avatar: Some(vec![0x89, 0x50, 0x4E, 0x47]), // PNG header
+    };
+    
+    // Even though SQLite and PostgreSQL handle this differently internally,
+    // the end result should be identical from the user's perspective
+    let user_id = ActiveDAL::create_user(&mut conn, new_user)?;
+    let user = ActiveDAL::get_user_by_id(&mut conn, &user_id)?;
+    
+    assert_eq!(user.name, "Test User");
+    assert_eq!(user.is_active, true);
+    Ok(())
+}
+```
+
+### Backend-Specific Tests
+
+These tests only make sense for a particular backend, like testing our SQLite wrapper types:
+
+```rust
+#![cfg(feature = "sqlite")]
+
+#[test]
+fn test_universal_uuid_sqlite_roundtrip() {
+    let mut conn = SqliteConnection::establish(":memory:").unwrap();
+    
+    diesel::sql_query("CREATE TABLE uuid_test (id BLOB PRIMARY KEY)")
+        .execute(&mut conn).unwrap();
+    
+    let test_uuid = UniversalUuid::new_v4();
+    
+    // Test that UUIDs can be stored and retrieved as BLOBs
+    diesel::sql_query("INSERT INTO uuid_test (id) VALUES (?1)")
+        .bind::<Binary, _>(&test_uuid)
+        .execute(&mut conn).unwrap();
+    
+    let result: UniversalUuid = diesel::sql_query("SELECT id FROM uuid_test")
+        .get_result(&mut conn).unwrap();
+    
+    assert_eq!(result, test_uuid);
+}
+```
+
+That's really it! We run both types of tests for each backend, making sure that:
+1. The backend-agnostic tests pass for both databases (proving that different implementations produce identical behavior)
+2. The backend-specific tests pass for their respective databases (proving the special cases work)
+
+> **Note for Developers**: To run these tests, you'll need to compile and test against each backend separately:
+> ```bash
+> # Test SQLite backend (default)
+> cargo test
+> 
+> # Test PostgreSQL backend
+> cargo test --no-default-features --features postgres
+> 
+> # Run specific test files
+> cargo test test_create_and_retrieve_user
+> cargo test test_universal_uuid_sqlite_roundtrip --features sqlite
+> 
+> # Run tests with output
+> cargo test -- --nocapture
+> ```
+
+## Implementation Plan: Adding SQLite Support to PostgreSQL Apps
+
+Based on all of this here's a practical implementation plan for adding SQLite support to existing PostgreSQL applications:
+
+### Phase 1: Analysis
+- Audit schema for PostgreSQL-specific features (UUIDs, JSON, arrays, enums)
+- Review queries for PostgreSQL-specific syntax
+
+### Phase 2: Foundation
+- Set up Cargo features for both backends
+- Create wrapper types for UUIDs, timestamps, and JSON data
+- Duplicate schema definitions with appropriate type mappings
+
+### Phase 3: Trait Implementations
+- Implement `ToSql` and `FromSql` traits for each wrapper type
+- Handle database-specific serialization in the trait implementations
+- Ensure foreign key relationships use the universal wrapper types
+
+### Phase 4: DAL Implementation
+- Keep existing PostgreSQL DAL unchanged
+- Create SQLite DAL implementing the same interface
+- Translate complex queries to SQLite equivalents
+- Handle differences in default value generation
+
+### Phase 5: Testing
+- Set up dual test suites
+- Create data migration scripts
+- Validate round-trip data integrity
+
+
+
+## When to Use This Approach
+
+This dual-backend approach works well when:
+- You need to support different deployment environments (e.g., cloud vs local)
+- You're building a library/framework that needs database flexibility
+- Your schema uses common data types (strings, numbers, booleans, basic binary data)
+
+It becomes less tractable when:
+- You heavily use PostgreSQL-specific features:
+  - Arrays and JSON operations
+  - Custom types and enums
+  - Advanced indexing (GIN, GiST)
+  - Full-text search
+- You need advanced concurrency features:
+  - Row-level locking
+  - Advisory locks
+  - Transaction isolation levels
+
+
+In these cases, you might be better off picking one database and optimizing for it
+
+
+## Conclusion
+
+
+
+Building a dual-backend Rust application showed us that feature flags and separate DAL implementations work better than trying to unify everything. While it's tempting to build elaborate abstractions, keeping the implementations separate gives us:
+
+- **Clarity**: Each backend's logic is isolated and easy to understand
+- **Performance**: Zero runtime overhead from abstraction layers
+- **Maintainability**: Changes to one backend don't affect the other
+- **Type Safety**: Compile-time verification of backend compatibility
+
+We initially worried about the code duplication in our DAL implementations, but it turned out to be the right trade-off. Having separate implementations means a simpler mental model for debugging and extending each backend - you only need to think about one database at a time.
+
+If you're thinking of adding SQLite support to your PostgreSQL application, do yourself a favor and start with universal wrapper types and parallel dal implementation from day one. Trust us, you don't want to refactor this later.
+
+---
+
+*The complete source code for this dual-backend demo is available at https://github.com/colliery-io/dual-backend-demo* 
