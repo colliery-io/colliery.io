@@ -1,0 +1,486 @@
+---
+title: The Dispatcher Pattern 
+description: A practical guide to implementing the dispatcher pattern in Python distributions, demonstrating how to maintain identical interfaces across mutually exclusive implementations or configurations, ensuring flexibility and minimal dependencies.
+draft: false
+authors:
+  - colliery-actual
+pubDate: 2024-03-19
+heroImage: ./hero-image.png
+categories:
+  - python
+  - architecture
+  - design-patterns
+  - build-systems
+  - testing
+---
+
+# The Dispatcher Pattern
+
+When you need to maintain multiple Python implementations that must expose identical interfaces, you face a tricky problem: how do you keep the namespaces and function signatures perfectly in sync? Today, we want to share how we solved this in Cloacina using what we call the dispatcher pattern.
+
+## The Challenge
+
+While we'll use Cloacina's database backends as our example, this pattern applies to any situation where you need to maintain multiple implementations with identical interfaces. In our case, Cloacina is a workflow orchestration library written in Rust that supports both PostgreSQL and SQLite as storage backends. When creating Python bindings, we wanted to:
+
+1. Allow users to install only the implementation they need (minimize dependencies)
+2. Provide a single, consistent import interface regardless of implementation
+3. Avoid runtime overhead from unused implementations
+4. Make implementation selection explicit and predictable
+
+## The Dispatcher Pattern
+
+The solution we implemented uses what we call the "dispatcher pattern" - a pure Python package that acts as a thin routing layer between the user and the actual backend implementation.
+
+Here's how it works:
+
+### 1. Separate Packages
+
+We have three packages:
+- `cloaca` - The dispatcher (pure Python)
+- `cloaca-postgres` - PostgreSQL backend (Rust extension via PyO3)
+- `cloaca-sqlite` - SQLite backend (Rust extension via PyO3)
+
+<Admonition variant="info">
+These packages are mutually exclusive because Cloacina uses Rust's feature flag system to compile only the code needed for each backend. The feature flags are set at compile time, making it impossible to have both backends active in the same binary.
+</Admonition>
+
+### 2. Installation via Pip Extras
+
+Users install the package with their desired backend:
+
+```bash
+# For PostgreSQL
+pip install cloaca[postgres]
+
+# For SQLite  
+pip install cloaca[sqlite]
+```
+
+This uses pip's "extras" feature to pull in the appropriate backend package as a dependency.
+
+### 3. Dynamic Backend Loading
+
+Let's walk through how the dispatcher works at runtime. When a user imports the package, Python executes the module in this order:
+
+1. **Module Setup**
+First, the module imports and initial setup:
+
+```python
+import importlib
+from typing import Any, Optional
+__backend__: Optional[str] = None
+```
+
+2. **Helper Functions**
+Next, Python defines the helper functions (but doesn't execute them yet):
+
+```python
+def _validate_backend_version(module: Any, backend_name: str) -> None:
+    if hasattr(module, "__version__") and module.__version__ != __version__:
+        raise ImportError(f"Version mismatch: dispatcher {__version__} != {backend_name} {module.__version__}")
+```
+
+<Admonition variant="info">
+The `__version__` variable is automatically injected by the build system (in our case, Maturin) from the version specified in `pyproject.toml`. This ensures version consistency between the dispatcher and its backends.
+</Admonition>
+
+3. **Backend Loading Logic**
+Then, the backend loading logic is defined (before it's used):
+
+```python
+def _load_backend() -> tuple[Any, str]:
+    available_backends = []
+    
+    # Try each backend
+    for backend in ["postgres", "sqlite"]:
+        try:
+            module = importlib.import_module(f"cloaca_{backend}")
+            _validate_backend_version(module, backend)
+            available_backends.append((backend, module))
+        except ImportError as e:
+            if "Version mismatch" in str(e): raise
+            continue
+    
+    # Select appropriate backend
+    if not available_backends:
+        raise ImportError("No backend installed. Install: pip install cloaca[postgres] or cloaca[sqlite]")
+    # there can only be 1 backend
+    if len(available_backends) > 1:
+        raise ImportError(f"Multiple backends installed: {', '.join(b for b, _ in available_backends)}")
+    
+    return available_backends[0]
+```
+
+4. **Main Execution**
+Finally, the main execution block runs during import:
+
+```python
+try:
+    # Try to load a backend
+    _backend_module, __backend__ = _load_backend()
+    
+    # Re-export all backend symbols
+    __all__ = getattr(_backend_module, "__all__", [])
+    for attr in __all__:
+        globals()[attr] = getattr(_backend_module, attr)
+        
+    # Explicitly export common symbols
+    if hasattr(_backend_module, "hello_world"):
+        hello_world = _backend_module.hello_world
+    if hasattr(_backend_module, "get_backend"):
+        get_backend = _backend_module.get_backend
+
+except ImportError as import_error:
+    # Create placeholder functions if no backend
+    def _raise_no_backend(*args, **kwargs):
+        raise ImportError(str(import_error))
+    hello_world = get_backend = _raise_no_backend
+    __all__ = ["hello_world", "get_backend"]
+```
+
+This means when a user does `import cloaca`, the backend is already loaded and all symbols are ready to use (or error-raising placeholders are in place if no backend was found).
+
+Here's what happens in different scenarios:
+
+```python
+# Happy path - PostgreSQL backend installed
+>>> import cloaca
+>>> cloaca.hello_world()
+'Hello from Cloaca backend!'
+>>> cloaca.get_backend()
+'postgres'
+
+# Happy path - SQLite backend installed
+>>> import cloaca
+>>> cloaca.hello_world()
+'Hello from Cloaca backend!'
+>>> cloaca.get_backend()
+'sqlite'
+
+# Sad path - No backend installed
+>>> import cloaca
+>>> cloaca.hello_world()
+ImportError: No backend installed. Install: pip install cloaca[postgres] or cloaca[sqlite]
+
+# Sad path - Version mismatch
+>>> import cloaca
+ImportError: Version mismatch: dispatcher 1.0.0 != postgres 1.1.0. Fix: pip uninstall cloaca cloaca-postgres && pip install cloaca[postgres]==1.0.0
+
+# Sad path - Multiple backends installed
+>>> import cloaca
+ImportError: Multiple backends installed: postgres, sqlite. Use separate virtual environments.
+```
+
+The dispatcher ensures that:
+1. Users get a clear error if no backend is installed
+2. Version mismatches are caught early with helpful fix instructions
+3. Multiple backends are prevented to avoid confusion
+4. The API remains consistent regardless of which backend is used
+
+## Benefits of This Approach
+
+### 1. Clean User Experience
+
+Users always import from the same package:
+
+```python
+import cloaca
+
+# Works the same regardless of backend
+workflow = cloaca.Workflow("my-workflow")
+```
+
+### 2. Minimal Dependencies
+
+Users only install what they need. A PostgreSQL user doesn't need SQLite libraries, and vice versa. 
+
+<Admonition variant="caution">
+These backends aren't just optional dependencies - they're mutually exclusive because they're compiled with Rust's feature flags. The PostgreSQL and SQLite implementations can't coexist in the same binary, making the dispatcher pattern essential for managing these competing implementations.
+</Admonition>
+
+### 3. Compile-Time Optimization
+
+Since we use conditional compilation in Rust, each backend package only contains the code it needs:
+
+```rust
+#[pymodule]
+#[cfg(feature = "postgres")]
+fn cloaca_postgres(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    // PostgreSQL-specific implementation
+}
+
+#[pymodule]
+#[cfg(feature = "sqlite")]
+fn cloaca_sqlite(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    // SQLite-specific implementation
+}
+```
+
+### 4. Clear Error Messages
+
+If no backend is installed, users get a helpful error message telling them exactly what to do.
+
+### 5. Virtual Environment Isolation
+
+The pattern naturally encourages users to use separate virtual environments for different backends, preventing configuration conflicts.
+
+## The Build System Challenge
+
+<Admonition variant="info">
+While we've embraced WET (Write Every Time) in previous posts for its simplicity, this case required a more sophisticated approach. The complexity of managing competing Rust implementations and ensuring version consistency across multiple packages would create an unsustainable maintenance burden if we duplicated code.
+</Admonition>
+
+Implementing the dispatcher pattern introduces a significant build system challenge: **how do you avoid code duplication while maintaining clean separation between backends?**
+
+Our solution uses a sophisticated template-based build system that generates all configuration files and Python code from a single source. We built this using [Angreal](https://angreal.github.io/angreal/), our task automation and project templating tool that combines Python's flexibility with Rust's performance.
+
+```python
+# .angreal/task_cloaca.py
+@cloaca()
+@angreal.command(name="generate", about="generate all configuration files from templates")
+@angreal.argument(name="backend", long="backend", help="Backend to generate for: postgres or sqlite", required=True)
+def generate(backend):
+    """Generate all configuration files from templates."""
+    try:
+        version = get_workspace_version()
+        
+        project_root = Path(angreal.get_root()).parent
+        template_dir = Path(angreal.get_root()) / "templates"
+        
+        # Generate dispatcher pyproject.toml
+        dispatcher_template = template_dir / "dispatcher_pyproject.toml.j2"
+        dispatcher_content = render_template(dispatcher_template.read_text(), {"version": version})
+        dispatcher_path = project_root / "cloaca" / "pyproject.toml"
+        
+        # Generate backend Cargo.toml
+        backend_template = template_dir / "backend_cargo.toml.j2"
+        backend_content = render_template(backend_template.read_text(), {"backend": backend, "version": version})
+        backend_path = project_root / "cloaca-backend" / "Cargo.toml"
+        
+        # Generate backend pyproject.toml
+        backend_pyproject_template = template_dir / "backend_pyproject.toml.j2"
+        backend_pyproject_content = render_template(backend_pyproject_template.read_text(), {"backend": backend, "version": version})
+        backend_pyproject_path = project_root / "cloaca-backend" / "pyproject.toml"
+        
+        # Write files
+        files_to_write = {
+            dispatcher_path: dispatcher_content,
+            backend_path: backend_content,
+            backend_pyproject_path: backend_pyproject_content
+        }
+        
+        print(f"Writing {len(files_to_write)} files...")
+        for file_path, content in files_to_write.items():
+            write_file_safe(file_path, content, backup=False)
+            print(f"  {file_path}")
+```
+
+We generate our build files from templates, rendering them with version extracted from the workspace Cargo file and the selected backend. These files are intentionally clobbered regularly to maintain a clean "just-in-time" build pattern - we'll explore this approach in depth later.
+
+### Testing Considerations
+
+Testing becomes quite complex with this pattern. We solved it by creating ephemeral virtual environments for each test run:
+
+```python
+def _build_and_install_cloaca_backend(backend, venv_name):
+    """Build and install backend in a fresh virtualenv for testing."""
+    venv = VirtualEnv(path=venv_name, now=True)
+    pip = venv.path / "bin" / "pip3"
+    python = venv.path / "bin" / "python"
+    backend_dir = Path("cloaca-backend")
+
+    # Install dependencies
+    subprocess.run([python, "-m", "ensurepip"], check=True)
+    subprocess.run([pip, "install", "maturin", "pytest"], check=True)
+    subprocess.run([pip, "install", "-e", "cloaca"], check=True)
+
+    # Build and install backend wheel
+    subprocess.run([
+        venv.path / "bin" / "maturin", "build",
+        "--no-default-features", "--features", backend, "--release"
+    ], cwd=backend_dir, check=True)
+    wheel = next((backend_dir / "target" / "wheels").glob(f"cloaca_{backend}-*.whl"))
+    subprocess.run([pip, "install", str(wheel)], check=True)
+    return venv, python, pip
+```
+
+This snippet shows the core steps for building and installing a backend in an isolated environment for testing. For clarity, we've omitted logging, defensive checks, and cleanup logic that would be present in "production" code.
+
+### Rust Module Implementation
+
+A minimal backend module with feature flag and exports:
+
+```rust
+use pyo3::prelude::*;
+
+#[pyfunction]
+fn hello_world() -> String {
+    "Hello from Cloaca backend!".to_string()
+}
+
+#[pymodule]
+#[cfg(feature = "postgres")]
+fn cloaca_postgres(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(hello_world, m)?)?;
+    Ok(())
+}
+
+#[pymodule]
+#[cfg(feature = "sqlite")]
+fn cloaca_sqlite(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(hello_world, m)?)?;
+    Ok(())
+}
+```
+
+This is a PyO3 implementation that compiles and binds Rust code to Python. For more details, check out the [PyO3 documentation](https://pyo3.rs/).
+
+## Version Safety and Backend Coupling
+
+One critical aspect of the dispatcher pattern is ensuring tight coupling between the dispatcher version and backend versions to prevent runtime failures and API inconsistencies.
+
+### The Version Coupling Challenge
+
+Since the dispatcher dynamically loads backends at runtime, there's a risk of version mismatches:
+
+```python
+# What happens if these versions don't match?
+pip install cloaca[postgres]==1.0.0  # Installs cloaca==1.0.0 + cloaca-postgres==1.0.0
+pip install cloaca-postgres==1.1.0   # Accidentally upgrades backend but not dispatcher
+```
+
+### Our Solution: Synchronized Versioning
+
+We enforce version synchronization through several mechanisms:
+
+#### 1. Exact Version Pinning in pip extras
+```toml
+# dispatcher pyproject.toml template
+[project.optional-dependencies]
+postgres = ["cloaca-postgres=={{version}}"]  # Exact version, no flexibility
+sqlite = ["cloaca-sqlite=={{version}}"]
+```
+
+#### 2. Runtime Version Validation
+```python
+# In dispatcher __init__.py
+def _validate_backend_version(backend_module, expected_version):
+    """Ensure backend version matches dispatcher version."""
+    backend_version = getattr(backend_module, '__version__', None)
+    if backend_version != expected_version:
+        raise ImportError(
+            f"Backend version mismatch: expected {expected_version}, "
+            f"got {backend_version}. Reinstall with 'pip install cloaca[backend]' "
+            f"to ensure version compatibility."
+        )
+
+# Called during backend loading
+_validate_backend_version(_backend_module, __version__)
+```
+
+#### 3. Build-Time Version Consistency
+Our template system ensures all packages use the same version:
+
+```python
+# All templates receive the same version context
+context = {"backend": backend, "version": version}  # From workspace Cargo.toml
+```
+
+### API Compatibility Enforcement
+
+Beyond version numbers, we ensure API compatibility:
+
+#### 1. Shared Interface Definition
+```python
+# Each backend must expose the same interface
+REQUIRED_BACKEND_ATTRS = ['hello_world', 'get_backend', '__backend__', '__version__']
+
+def _validate_backend_interface(backend_module):
+    """Ensure backend implements required interface."""
+    missing_attrs = [attr for attr in REQUIRED_BACKEND_ATTRS 
+                     if not hasattr(backend_module, attr)]
+    if missing_attrs:
+        raise ImportError(f"Backend missing required attributes: {missing_attrs}")
+```
+
+### Safety Implications
+
+Version coupling failures can cause:
+
+1. **Silent API changes** - Methods exist but behave differently
+2. **Missing functionality** - New dispatcher features not available in old backends  
+3. **Runtime crashes** - Incompatible data structures or calling conventions
+4. **Security issues** - Different validation logic between versions
+
+### Trade-offs
+
+**Benefits of tight coupling:**
+- Guaranteed compatibility at runtime
+- Simplified testing (fewer version combinations)
+- Clear error messages for version mismatches
+
+**Costs of tight coupling:**
+- Users can't mix and match versions for bug fixes
+- Coordinated releases required for all packages
+- More complex CI/CD pipeline
+
+## When to Use This Pattern
+
+The dispatcher pattern is ideal when:
+
+- You have multiple implementations that are mutually exclusive (e.g., different backends, feature sets, or configurations).
+- You want to minimize user dependencies by allowing them to install only what they need.
+- You need compile-time optimization for each implementation.
+- You want a single, consistent API regardless of the underlying implementation.
+
+It might not be the best choice if:
+
+- Users commonly need to switch implementations at runtime.
+- The implementations are lightweight and don't benefit from separate compilation.
+- You need to support multiple implementations simultaneously in the same process.
+
+## Lessons Learned: Complexity vs. Benefits
+
+Building this system taught us valuable lessons about when sophisticated automation makes sense versus simpler approaches. Let's break down what we learned:
+
+### When This Approach Makes Sense
+
+The template-based build system was worth the complexity because:
+
+1. **Scale**: We needed to support multiple implementations with identical APIs
+2. **Maintenance**: Manual duplication would lead to drift and inconsistencies  
+3. **Testing**: Complete isolation between implementations was critical
+4. **Distribution**: We needed production-ready wheels for PyPI
+
+### When Simpler Approaches Are Better
+
+For many projects, this would be overkill. Consider simpler alternatives if:
+
+- You have only one implementation or implementations that don't need isolation
+- Code duplication is minimal and manageable manually
+- Testing doesn't require complete environment isolation
+- You don't need automated wheel building
+
+### The Real Cost
+
+The sophistication came with trade-offs:
+
+- **Learning curve**: New contributors need to understand the template system
+- **Debugging complexity**: Generated files make error tracing harder, requiring composable build steps that allow for picking apart the build process
+- **Build dependencies**: Requires angreal, Docker, and virtual environment management
+- **Mental overhead**: Every change requires thinking about template implications
+- **IDE limitations**: The JIT compilation approach can break modern IDE features, as build files may not exist until generated. We solved this with additional commands to generate and scrub files consistently, but it required extra effort.
+
+## Conclusion
+
+The dispatcher pattern provides an elegant solution for Python libraries with multiple implementations or configurations, giving users a clean API while maintaining flexibility and minimizing dependencies. However, the sophisticated build system required to support it represents a significant engineering investment.
+
+The pattern works best for libraries where:
+- Implementation separation provides real value to users
+- The maintenance overhead of duplication would be significant
+- Clean testing isolation is important
+- Distribution complexity is manageable
+
+For simpler use cases, traditional approaches may offer better development velocity with acceptable trade-offs. The key is honestly evaluating whether the user experience benefits justify the implementation complexity.
+
+Next time you're building a Python library with multiple implementation options, carefully weigh these factors before choosing your approach.
