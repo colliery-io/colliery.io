@@ -1,0 +1,638 @@
+---
+title: Bridging Python and Rust
+description: A practical guide to combining Rust's performance and safety with Python's productivity and ecosystem, showing how to build high-performance applications without sacrificing developer experience
+draft: false
+authors:
+  - colliery-actual
+pubDate: 2025-06-07
+heroImage: ./hero-image.png
+categories:
+  - rust
+  - python
+  - architecture
+---
+
+# Bridging Python and Rust
+
+Combining Rust and Python is a common approach for building applications. This guide covers the implementation details: handling memory across the boundary, building safe interfaces between the languages, and creating extensible plugin systems.
+
+## Prerequisites
+
+This guide assumes you have:
+
+- **Intermediate Python** knowledge (classes, modules, package structure)
+- **Basic Rust** familiarity (structs, traits, error handling, Cargo)
+- **Development tools**: Python 3.8+, Rust 1.70+, and either `uv` or `virtualenv`
+- **Understanding of**: FFI concepts, basic memory management, and build systems
+
+You'll learn how to architect, implement, and deploy Python-Rust hybrid applications using PyO3.
+
+## When to Use This Pattern
+
+This pattern works best when you have:
+
+**Strong Candidates:**
+- CPU-intensive operations that need Python ecosystem access
+- Existing Python codebases requiring performance improvements
+- Applications needing both safety (Rust) and flexibility (Python)
+- Libraries that benefit from zero-copy data interchange
+
+**Poor Candidates:**
+- Simple scripts without performance requirements  
+- Pure I/O bound applications
+- Codebases where build complexity outweighs benefits
+- Teams without Rust expertise for maintenance
+
+**Decision Framework:**
+- Performance gain > 2x? Consider this pattern
+- Need Python ecosystem? This pattern over pure Rust
+- Complex build requirements acceptable? Proceed
+- Team can maintain both languages? Proceed
+
+## The Pattern in a Nutshell
+
+At its core, this pattern follows a simple design:
+
+```
+Python API (User-facing) → Boundary Layer → Rust Core (Business Logic)
+```
+
+The design separates concerns:
+
+- **Rust Core**: Performance-critical operations and business logic
+- **Boundary Layer**: Interface between languages
+- **Python Shell**: User-facing API
+
+This pattern delivers three benefits:
+
+1. **Performance**: CPU and memory-intensive operations in Rust
+2. **Extensibility**: Plugin systems in Python
+3. **Safety**: Rust's type system for critical code
+
+The following case studies show how major projects apply this pattern in practice.
+
+## Case Studies
+
+### 1. Polars: DataFrame Processing
+
+Polars is a DataFrame library that uses Rust for its core operations. Their key architectural decisions:
+
+- **Memory Management**: Zero-copy data layout between Rust and Python
+- **Parallel Processing**: Rayon-based parallel execution in Rust core
+- **API Design**: Python API maps directly to Rust operations
+- **Boundary Layer**: Minimal conversion between languages
+
+The result is a DataFrame library that's both fast and ergonomic, with performance comparable to specialized C++ implementations.
+
+[Source Code](https://github.com/pola-rs/polars)
+
+### 2. Ruff: Python Linter
+
+Ruff is a Python linter written in Rust. Their approach:
+
+- **AST Processing**: Python AST parsing and analysis in Rust
+- **Rule Engine**: Parallel rule execution with shared configuration
+- **Error Handling**: Rich diagnostic information across the boundary
+- **Plugin System**: Python-based rule definitions with Rust execution
+
+This architecture allows Ruff to be both fast and extensible, with a familiar Python interface for rule authors.
+
+[Source Code](https://github.com/astral-sh/ruff)
+
+### 3. Angreal: Extending Rust with Python
+
+Angreal demonstrates how Python can make Rust more flexible through plugins. Their approach:
+
+- **Plugin Architecture**: Python-based plugin system for Rust applications
+- **Dynamic Loading**: Runtime loading of Python modules into Rust
+- **Type Safety**: Safe conversion between Rust and Python types
+- **Error Handling**: Rich error propagation across the boundary
+
+This application shows how Rust's safety and performance can be combined with Python's dynamic nature to create extensible systems.
+
+[Source Code](https://github.com/angreal/angreal)
+
+These case studies demonstrate the pattern's versatility across different domains. Now let's implement our own example to understand the technical details.
+
+## Hands-On Example: Text Processing Pipeline
+
+Let's build a text processing pipeline that demonstrates the key benefits of this pattern. **Note: This example is somewhat contrived, but it illustrates the core concepts clearly** - in practice, you'd apply these patterns to more complex domains like data processing, image manipulation, or numerical computation.
+
+Our example will show:
+
+**Performance**: Core text processing in Rust (fast)  
+**Extensibility**: Plugin system in Python (flexible)  
+**Safety**: Error handling across the language boundary (reliable)
+
+We'll create a system that:
+1. **Processes text efficiently** in Rust (trimming, validation)
+2. **Executes Python plugins** from within Rust (no data copying)
+3. **Handles errors gracefully** across the language boundary
+
+This demonstrates how you can keep performance-critical code in Rust while maintaining the flexibility of Python for extensible features.
+
+### Project Structure
+
+```
+text-processor/
+├── rust-core/          # Rust implementation
+│   ├── src/
+│   │   └── lib.rs      # Core processing logic and plugin management
+│   └── Cargo.toml
+├── boundary/           # PyO3 boundary layer
+│   ├── src/
+│   │   └── lib.rs      # Python bindings
+│   └── Cargo.toml
+├── python/             # Python package
+│   ├── text_processor/
+│   │   ├── __init__.py # Python API
+│   │   └── plugins/    # Plugin directory
+│   └── pyproject.toml
+└── Cargo.toml          # Workspace root
+```
+
+This structure separates our code into three main parts:
+- `rust-core`: Contains the performance-critical Rust code
+- `boundary`: Handles the conversion between Rust and Python
+- `python`: Provides the user-facing API and plugin system
+
+### 1. Rust Core Implementation
+
+Let's implement the core text processing in Rust with plugin management:
+
+```rust
+// rust-core/src/lib.rs
+use pyo3::prelude::*;
+use std::path::Path;
+
+pub struct PluginManager {
+    plugins: Vec<PyObject>,
+}
+
+impl PluginManager {
+    pub fn new() -> PyResult<Self> {
+        Ok(Self { plugins: Vec::new() })
+    }
+
+    pub fn load_plugins(&mut self, py: Python<'_>, plugin_dir: &Path) -> PyResult<()> {
+        let sys = py.import("sys")?;
+        let path = sys.getattr("path")?;
+        path.call_method1("append", (plugin_dir.to_str().unwrap(),))?;
+
+        // Import and store plugin functions
+        for entry in std::fs::read_dir(plugin_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.extension().map_or(false, |ext| ext == "py") {
+                let module_name = path.file_stem().unwrap().to_str().unwrap();
+                let module = py.import(module_name)?;
+                if let Ok(process_fn) = module.getattr("process") {
+                    self.plugins.push(process_fn.into());
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn process(&self, py: Python<'_>, text: &str) -> PyResult<String> {
+        let mut result = text.to_string();
+        for plugin in &self.plugins {
+            result = plugin.call1(py, (result,))?.extract(py)?;
+        }
+        Ok(result)
+    }
+}
+
+pub struct TextProcessor {
+    text: String,
+    plugin_manager: PluginManager,
+}
+
+impl TextProcessor {
+    pub fn new(text: String, plugin_dir: &Path) -> PyResult<Self> {
+        let mut plugin_manager = PluginManager::new()?;
+        Python::with_gil(|py| {
+            plugin_manager.load_plugins(py, plugin_dir)?;
+            Ok(Self { text, plugin_manager })
+        })
+    }
+
+    pub fn process(&self) -> PyResult<String> {
+        // First do Rust processing (trim whitespace)
+        let processed = self.text
+            .lines()
+            .map(|line| line.trim())
+            .collect::<Vec<_>>()
+            .join("\n");
+        
+        // Then apply Python plugins while keeping data in Rust
+        Python::with_gil(|py| {
+            self.plugin_manager.process(py, &processed)
+        })
+    }
+}
+```
+
+The Rust code above:
+1. **PluginManager**: Handles loading and executing Python plugins from Rust
+2. **TextProcessor**: Combines Rust processing with Python plugin execution
+3. **Plugin Loading**: Dynamically imports Python modules and stores callable functions
+4. **Processing Pipeline**: First processes text in Rust, then applies Python plugins sequentially
+5. **Memory Efficiency**: Data stays in Rust's memory space throughout processing
+
+### 2. PyO3 Boundary Layer
+
+Now we need to expose our Rust code to Python. This is where **PyO3** comes in - it's the bridge that makes Python-Rust interop safe and ergonomic.
+
+**Why PyO3?** Python's C API is notoriously difficult to use correctly. PyO3 provides:
+- **Memory safety**: Automatic reference counting and lifetime management
+- **Type conversion**: Seamless translation between Rust and Python types  
+- **Error handling**: Rust errors become Python exceptions automatically
+- **Performance**: Zero-copy operations where possible
+
+**Alternatives and tradeoffs:**
+- Pure C API: More control, much more complexity and unsafe code
+- ctypes: Simpler but limited type safety and performance
+- Cython: Good for Python-heavy code, less suitable for Rust integration
+
+The boundary layer uses PyO3 to expose our Rust code to Python. Key concepts:
+- `#[pyclass]` marks a Rust struct as usable from Python
+- `#[pymethods]` marks methods that should be available in Python
+- `PyResult` is PyO3's way of handling Python exceptions
+- `Python<'_>` is a token that ensures we're in a Python context
+
+```rust
+// boundary/src/lib.rs
+use pyo3::prelude::*;
+use text_processor_core::TextProcessor;
+use std::path::PathBuf;
+
+#[pyclass]
+struct PyTextProcessor {
+    inner: TextProcessor,
+}
+
+#[pymethods]
+impl PyTextProcessor {
+    #[new]
+    fn new(text: String, plugin_dir: String) -> PyResult<Self> {
+        let path = PathBuf::from(plugin_dir);
+        let inner = TextProcessor::new(text, &path)?;
+        Ok(Self { inner })
+    }
+
+    fn process(&self) -> PyResult<String> {
+        self.inner.process()
+    }
+}
+
+#[pymodule]
+fn text_processor(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+    m.add_class::<PyTextProcessor>()?;
+    Ok(())
+}
+```
+
+This code:
+1. Creates a Python-compatible wrapper around our Rust struct
+2. Converts Rust errors to Python exceptions
+3. Exposes our processor to Python through a module
+
+### 3. Python API and Plugin System
+
+Instead of moving data back to Python for processing, we'll execute Python plugins from within Rust.
+
+```rust
+// rust-core/src/plugins.rs
+use pyo3::prelude::*;
+use std::path::Path;
+
+pub struct PluginManager {
+    plugins: Vec<PyObject>,
+}
+
+impl PluginManager {
+    pub fn new() -> PyResult<Self> {
+        Ok(Self { plugins: Vec::new() })
+    }
+
+    pub fn load_plugins(&mut self, py: Python<'_>, plugin_dir: &Path) -> PyResult<()> {
+        let sys = py.import("sys")?;
+        let path = sys.getattr("path")?;
+        path.call_method1("append", (plugin_dir.to_str().unwrap(),))?;
+
+        // Import and store plugin functions
+        for entry in std::fs::read_dir(plugin_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.extension().map_or(false, |ext| ext == "py") {
+                let module_name = path.file_stem().unwrap().to_str().unwrap();
+                let module = py.import(module_name)?;
+                if let Ok(process_fn) = module.getattr("process") {
+                    self.plugins.push(process_fn.into());
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn process(&self, py: Python<'_>, text: &str) -> PyResult<String> {
+        let mut result = text.to_string();
+        for plugin in &self.plugins {
+            result = plugin.call1(py, (result,))?.extract(py)?;
+        }
+        Ok(result)
+    }
+}
+```
+
+The `PluginManager` handles loading and executing Python plugins from Rust:
+- `load_plugins`: Adds the plugin directory to Python's path and imports each `.py` file
+- `process`: Executes each plugin in sequence, passing the result of one to the next
+- All operations happen within a Python GIL context to ensure thread safety
+
+```rust
+// rust-core/src/lib.rs
+use std::error::Error;
+use pyo3::prelude::*;
+use std::path::Path;
+
+pub struct TextProcessor {
+    text: String,
+    plugin_manager: PluginManager,
+}
+
+impl TextProcessor {
+    pub fn new(text: String, plugin_dir: &Path) -> PyResult<Self> {
+        let mut plugin_manager = PluginManager::new()?;
+        Python::with_gil(|py| {
+            plugin_manager.load_plugins(py, plugin_dir)?;
+            Ok(Self { text, plugin_manager })
+        })
+    }
+
+    pub fn process(&self) -> PyResult<String> {
+        // First do Rust processing
+        let processed = self.text
+            .lines()
+            .map(|line| line.trim())
+            .collect::<Vec<_>>()
+            .join("\n");
+        
+        // Then apply Python plugins while keeping data in Rust
+        Python::with_gil(|py| {
+            self.plugin_manager.process(py, &processed)
+        })
+    }
+}
+```
+
+The `TextProcessor` combines Rust processing with Python plugins:
+- `new`: Initializes the processor and loads plugins
+- `process`: First processes text in Rust, then applies Python plugins
+- Uses `Python::with_gil` to safely execute Python code from Rust
+
+The Python plugins remain the same, but now they're executed from within Rust:
+
+```python
+# python/text_processor/plugins/capitalize.py
+def process(text: str) -> str:
+    """Capitalize the first letter of each line."""
+    return "\n".join(line.capitalize() for line in text.splitlines())
+```
+
+```python
+# python/text_processor/plugins/reverse.py
+def process(text: str) -> str:
+    """Reverse each line."""
+    return "\n".join(line[::-1] for line in text.splitlines())
+```
+
+Each plugin is a simple Python function that:
+- Takes a string input
+- Returns a processed string
+- Can be loaded and executed from Rust
+
+### 4. Building and Running the Example
+
+First, create a virtual environment and build the project:
+
+```bash
+# Create virtual environment
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Build and install the package
+cd python
+maturin develop
+cd ..
+```
+
+Now create and run the usage example:
+
+```python
+#!/usr/bin/env python3
+
+from text_processor import PyTextProcessor as TextProcessor
+from pathlib import Path
+
+def main():
+    # Sample text to process
+    text = """
+    hello world
+    this is a test
+    of our processor
+    """
+    
+    # Create processor with text and plugin directory
+    plugin_dir = Path("python/text_processor/plugins")
+    processor = TextProcessor(text, str(plugin_dir))
+    
+    # Process text (all processing happens in Rust)
+    result = processor.process()
+    
+    print("Original text:")
+    print(repr(text))
+    print("\nProcessed result:")
+    print(repr(result))
+    print("\nFinal output:")
+    print(result)
+
+if __name__ == "__main__":
+    main()
+```
+
+Run the example:
+
+```bash
+python example.py
+```
+
+**Expected Output:**
+```
+Original text:
+'\n    hello world\n    this is a test\n    of our processor\n    '
+
+Processed result:
+'\nDlrow olleh\nTset a si siht\nRossecorp ruo fo'
+
+Final output:
+
+Dlrow olleh
+Tset a si siht
+Rossecorp ruo fo
+```
+
+The usage demonstrates the complete pipeline:
+- Create a processor with text and plugin directory
+- Call process() to run both Rust and Python processing
+- All the complexity of plugin management is hidden in Rust
+
+Let's see what happens at each stage:
+
+1. **Input Text**:
+```
+    hello world
+    this is a test
+    of our processor
+```
+
+2. **After Rust Processing** (trimming whitespace):
+```
+hello world
+this is a test
+of our processor
+```
+
+3. **After Reverse Plugin** (executed in Rust):
+```
+dlrow olleh
+tset a si siht
+rossecorp ruo fo
+```
+
+4. **After Capitalize Plugin** (executed in Rust):
+```
+Dlrow olleh
+Tset a si siht
+Rossecorp ruo fo
+```
+
+The key difference in this approach is that:
+1. Data stays in Rust's memory space
+2. Python plugins are loaded once and stored as PyObjects
+3. Plugin execution happens within Rust's Python GIL context
+4. No data copying between languages during processing
+
+### Key Takeaways
+
+This lab demonstrates several important aspects of the pattern:
+
+1. **Separation of Concerns**
+   - Rust handles core text processing
+   - Python provides the plugin system
+   - PyO3 manages the boundary
+
+2. **Error Handling**
+   - Rust errors are converted to Python exceptions
+   - Type safety is maintained across the boundary
+
+3. **Extensibility**
+   - Python plugins can be added without recompiling
+   - Core functionality remains in Rust
+
+4. **Performance**
+   - Data stays in Rust's memory space
+   - Python plugins execute within Rust
+   - Minimal data copying between languages
+
+This example demonstrates the core concepts of the Python-Rust bridge pattern. While simple, it shows how real-world applications can leverage both languages' strengths for performance and extensibility.
+
+## Implementation Guide
+
+### Project Setup
+
+**1. Initialize the workspace:**
+```bash
+cargo new --lib rust-core
+cargo new --lib boundary  
+mkdir -p python/your_package/plugins
+```
+
+**2. Configure Cargo.toml files:**
+- Workspace root: Set `resolver = "2"`, define shared dependencies
+- Rust core: Standard library crate with PyO3 dependency
+- Boundary: `crate-type = ["cdylib"]` for Python module generation
+
+**Note:** For applications that need both library and binary interfaces, the common pattern is to expose a `main()` function through Python bindings and create a Python entry point (console script) that calls it - this avoids the complexity of mixed Rust binary/library builds.
+
+**3. Configure Python packaging:**
+- Use `pyproject.toml` with maturin build backend
+- Set correct module paths and manifest references
+- Configure Python source directory structure
+
+### Development Workflow
+
+**Build and test cycle:**
+```bash
+# Setup environment
+uv venv && source .venv/bin/activate
+
+# Develop and test
+cd python && maturin develop
+python -m pytest tests/
+
+# Build for distribution  
+maturin build --release
+```
+
+**Key development practices:**
+- Test Rust code independently before adding Python bindings
+- Use `Python::with_gil()` for all Python interactions from Rust
+- Handle errors at the boundary - convert Rust errors to Python exceptions
+- Validate plugin interfaces early in development
+
+### Common Patterns
+
+**Memory Management:**
+- Prefer `&str` over `String` for read-only data
+- Use `PyResult<T>` for all boundary functions
+- Store Python objects as `PyObject` for later execution
+
+**Error Handling:**
+- Convert Rust errors to appropriate Python exception types
+- Preserve error context across the boundary
+- Use `map_err()` to transform error types
+
+**Performance Optimization:**
+- Minimize GIL acquisition - batch Python operations
+- Avoid unnecessary string allocations
+- Use zero-copy operations where possible
+
+### Distribution
+
+**For libraries:**
+- Use `maturin build` to create wheels
+- Support multiple Python versions and platforms
+- Consider stub files (`.pyi`) for type hints
+
+**For applications:**
+- Bundle Rust and Python components together
+- Handle platform-specific builds appropriately
+- Document installation requirements clearly
+
+This pattern scales from simple utilities to complex applications. Start small, measure performance benefits, and expand the Rust core as needed.
+
+## Complete Example Code
+
+The full working example from this blog post is available at:
+
+**[https://github.com/colliery-io/rust-python-bridge](https://github.com/colliery-io/rust-python-bridge)**
+
+The repository includes:
+- Complete project structure and configuration files
+- Working Rust core with plugin management
+- PyO3 boundary layer implementation  
+- Python package with example plugins
+- Build and run instructions
+- Example usage and expected output
