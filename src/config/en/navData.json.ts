@@ -126,35 +126,39 @@ const navConfig: navItem[] = [
 	// },
 
 	{
-		text: "Solutions",
+		text: "Work",
 		dropdown: [
 			{
 				text: "Brokkr",
-				link: "/solutions/brokkr",
+				link: "/work/brokkr",
 			},
 			{
 				text: "Cloacina",
-				link: "/solutions/cloacina",
+				link: "/work/cloacina",
 			},
 			{
 				text: "Metis",
-				link: "/solutions/metis",
+				link: "/work/metis",
+			},
+			{
+				text: "Muninn",
+				link: "/work/muninn",
 			},
 			{
 				text: "Angreal",
-				link: "/solutions/angreal",
+				link: "/work/angreal",
 			},
 			{
 				text: "GraphQLite",
-				link: "/solutions/graphqlite",
+				link: "/work/graphqlite",
 			},
 			{
 				text: "fidius",
-				link: "/solutions/fidius",
+				link: "/work/fidius",
 			},
 			{
 				text: "CRT",
-				link: "/solutions/crt",
+				link: "/work/crt",
 			},
 		],
 	},

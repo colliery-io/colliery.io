@@ -17,7 +17,7 @@ const solutions = await getCollection("solutions", ({ data }) => data.draft !== 
 const filteredSolutions = filterCollectionByLanguage(solutions, defaultLocale);
 
 // deliberate display order; anything not listed falls to the end
-const order = ["brokkr", "cloacina", "metis", "angreal", "graphqlite", "fidius", "crt"];
+const order = ["brokkr", "cloacina", "metis", "muninn", "angreal", "graphqlite", "fidius", "crt"];
 const sortedSolutions = filteredSolutions.sort((a, b) => {
 	const ai = order.indexOf(a.id);
 	const bi = order.indexOf(b.id);
@@ -42,7 +42,7 @@ const sortedSolutions = filteredSolutions.sort((a, b) => {
 			{
 				sortedSolutions.map((solution, idx) => (
 					<a
-						href={`/solutions/${solution.id}`}
+						href={`/work/${solution.id}`}
 						class="group border-base-200 dark:border-base-800 dark:hover:bg-base-900 block h-full rounded-md border p-6 transition duration-200 hover:bg-white hover:shadow-xl"
 						data-aos="zoom-in"
 						data-aos-delay={0.1 * idx}

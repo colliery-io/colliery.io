@@ -13,7 +13,7 @@ It also gives you two execution primitives that compose. Durable workflows are d
 
 Tasks and workflows are defined with the `#[task]` and `workflow!` macros, which validate dependencies and data flow at compile time rather than leaving you to find a broken pipeline in production. State lives in PostgreSQL or SQLite, chosen at runtime from the connection URL; multi-tenant deployments get real isolation through per-tenant PostgreSQL schemas with fail-closed enforcement. Execution is content-versioned, so you always know which version of a workflow actually ran, and a Prometheus endpoint reports on the rest. Everything available in Rust is available in Python through the `cloaca` wheel as a first-class surface, not a feature flag.
 
-The name is Roman. Cloacina presided over the Cloaca Maxima, the drainage system that kept the city running underneath everything else; a fitting namesake for a layer whose whole job is to move work through reliably and stay out of the way.
+The name is Roman; Cloacina presided over the Cloaca Maxima, the drainage system that kept the city running underneath everything else.
 
 Cloacina is open source under the Apache 2.0 license. If you want help designing or operating workflows on it, [we offer consulting](https://colliery.io/contact/).
 
