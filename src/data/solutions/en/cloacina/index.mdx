@@ -1,90 +1,20 @@
 ---
 title: Cloacina
-description: Build Resilient Workflows, Execute With Confidence
+description: A workflow orchestration platform for Rust that runs embedded in your app or as a standalone server.
 draft: false
 image: ./image.png
-categories:
-  - product
 ---
 
-# Cloacina
+Plenty of work is too important to run as a loose script and too small to justify standing up a separate orchestration service. Cloacina is built for that middle ground; it is a workflow orchestration platform for Rust that you can embed directly in your application or run as a standalone server, using the same engine and the same packaging format either way.
 
-**Build Resilient Workflows. Execute With Confidence.**
+You pick the shape that fits the team. Embedded, Cloacina is a library inside your binary with nothing extra to operate. As a service, `cloacina-server` loads packaged `.cloacina` workflow archives over an HTTP and WebSocket API, uploaded and managed through the `cloacinactl` CLI. Moving from one to the other does not mean rewriting your workflows.
 
-**Cloacina** is your embedded workflow engine — orchestrating complex multi-step processes directly within your Rust applications. No message queues, no external orchestrators. Just rock-solid task pipelines with automatic retries, PostgreSQL-backed state persistence, and dependency resolution built right into your codebase.
+It also gives you two execution primitives that compose. Durable workflows are database-backed DAGs with retries, failure recovery, and multi-tenancy; reach for these when work has to survive a process restart. Computation graphs are in-process, deterministic, event-driven DAGs that fire on accumulator boundaries through reactors; reach for these when work is event-driven and latency matters. A workflow can subscribe to a reactor firing, and a workflow task can drive a computation graph, so the two are not separate worlds.
 
-[Get Started with Cloacina →](https://github.com/colliery-io/cloacina)
+Tasks and workflows are defined with the `#[task]` and `workflow!` macros, which validate dependencies and data flow at compile time rather than leaving you to find a broken pipeline in production. State lives in PostgreSQL or SQLite, chosen at runtime from the connection URL; multi-tenant deployments get real isolation through per-tenant PostgreSQL schemas with fail-closed enforcement. Execution is content-versioned, so you always know which version of a workflow actually ran, and a Prometheus endpoint reports on the rest. Everything available in Rust is available in Python through the `cloaca` wheel as a first-class surface, not a feature flag.
 
----
+The name is Roman. Cloacina presided over the Cloaca Maxima, the drainage system that kept the city running underneath everything else; a fitting namesake for a layer whose whole job is to move work through reliably and stay out of the way.
 
-## Use Cases
+Cloacina is open source under the Apache 2.0 license. If you want help designing or operating workflows on it, [we offer consulting](https://colliery.io/contact/).
 
-- **Data Processing Pipelines**  
-  Build ETL workflows that survive failures, restart from checkpoints, and scale with your data.
-
-- **Background Job Systems**  
-  Execute long-running tasks with automatic retries, progress tracking, and graceful recovery.
-
-- **Integration Workflows**  
-  Orchestrate complex business processes across systems with type-safe data flow and dependency management.
-
----
-
-## Key Features
-
-- **Embedded Framework**  
-  Integrates directly into your Rust applications — no external orchestrators or workflow services required.
-
-- **Resilient by Design**  
-  Automatic retries with configurable backoff strategies, failure recovery, and PostgreSQL-backed state persistence.
-
-- **Type-Safe Workflows**  
-  Compile-time validation of task dependencies and data flow using Rust's type system and custom macros.
-
-- **Content-Versioned Execution**  
-  Automatic workflow versioning based on task code and structure — know exactly what changed and when.
-
----
-
-## Get Started
-
-- **Define Your Tasks**  
-  Use Cloacina's `#[task]` macro to define async functions with retry policies and dependencies.
-
-- **Build Your Workflow**  
-  Compose tasks into workflows using the `workflow!` macro for type-safe orchestration.
-
-- **Execute and Monitor**  
-  Let Cloacina handle scheduling, state persistence, and recovery while you focus on business logic.
-
----
-
-## Why Cloacina?
-
-In Roman mythology, Cloacina was the goddess who presided over the sewers and drains — the hidden infrastructure that kept the city functioning. In our world, **Cloacina** is the hidden orchestration layer that keeps your applications running smoothly.
-
-Where ad-hoc scripts and manual processes lead to fragility, Cloacina brings systematic reliability. It doesn't just run your tasks — it remembers their state, recovers from failures, and ensures your workflows complete successfully.
-
-**State, persisted. Dependencies, resolved. Failures, recovered.**
-
----
-
-## Built for the Builder
-
-At Colliery, we build tools for developers who live in the code. Cloacina is made for backend engineers, data engineers, and systems architects who need workflows that work as hard as they do.
-
-It doesn't run in a separate service. It lives in your application. It doesn't add operational complexity. It removes it.
-
-Your workflows. Your database. Your control.
-
-**Workflows, embedded. Execution, resilient.**
-
-[ Start Building with Cloacina → ](https://github.com/colliery-io/cloacina)
-
---- 
-
-## Open Source & Consulting
-
-Cloacina is released under the Apache 2.0 license — free for everyone to use, modify, and distribute. 
-
-Need help implementing complex workflows or optimizing your task pipelines? Our team at Colliery offers [consulting services](https://colliery.io/contact/) to help you get the most out of Cloacina in your production environment.
+[Cloacina on GitHub](https://github.com/colliery-io/cloacina)

@@ -6,7 +6,7 @@ const siteData: SiteDataProps = {
 	// Your website's title and description (meta fields)
 	title: "Colliery Software",
 	description:
-		"",
+		"Colliery is a small, independent software studio building infrastructure and developer tooling in Rust, mostly in the open.",
 
 	// used on contact page and footer
 	contact: {
@@ -25,8 +25,8 @@ const siteData: SiteDataProps = {
 
 	// default image for meta tags if the page doesn't have an image already
 	defaultImage: {
-		src: "/images/cosmic-themes-logo.jpg",
-		alt: "Cosmic Themes logo",
+		src: "/assets/images/branding/colliery-site-logo.png",
+		alt: "Colliery",
 	},
 };
 

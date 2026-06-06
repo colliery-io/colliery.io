@@ -1,75 +1,17 @@
 ---
 title: Angreal
-description: Blueprints for Code. Tools for Craft.
+description: Project templates and per-project task automation in a single dependency-free binary.
 draft: false
-image: ./angreal_header.png
-categories:
-  - product
 ---
 
-# Angreal
+Two problems show up constantly in day-to-day development: starting projects consistently, and remembering how to operate them once they exist. Angreal handles both. It templates the structure of a project so every new one starts the same way, and it carries a set of tasks alongside the project so the commands for working with it travel with the code rather than living in someone's shell history. The idea is to remember by forgetting; you recall the command, not the dozen steps behind it.
 
-**Blueprints for Code. Tools for Craft.**
+Tasks are templated when a project is created but stay editable afterward, so two projects can share a task's name and shape while differing in what it actually does. You define them in Python with a decorator and run them through the `angreal` CLI; `angreal init` lays down a project from a template, and `angreal tree` shows the tasks a project exposes.
 
-Build smarter, faster, and stronger. Standardize your projects and automate your workflows — without the clutter.
+Angreal 2.0 is a complete rewrite in Rust. The original leaned on a stack of fast-moving Python libraries and spent too much of its life in dependency conflicts; the rewrite ships as a compiled binary that still installs through pip but carries no external Python dependencies of its own. There is also a Claude Code skill plugin that teaches an agent to discover a project's tasks and write new ones, so the conventions that help a person help a model too.
 
-[Get Started with Angreal →](https://angreal.github.io/angreal/)
+The name comes from fantasy literature, where an angreal is an object that lets its user safely draw on far more power than they could reach alone; a fair description of a small tool that puts a project's whole workflow behind a single command.
 
----
+Angreal is open source under the GPL-3.0 license; install it with `pip install angreal`.
 
-## Use Cases
-
-- **Rapid Project Kickoff**  
-  Spin up new repositories with pre-configured layouts, dependencies, and CI-ready setups.
-
-- **Developer Onboarding**  
-  New teammates can build, test, and ship in minutes — no tribal knowledge required.
-
-- **Unified Command Interface**  
-  Standardize your daily workflows across dozens of projects with one consistent CLI.
-
----
-
-## Key Features
-
-- **Project Templates**  
-  Customizable templates for any kind of project — from microservices to machine learning models.
-
-- **Embedded Task Automation**  
-  Define tasks once in Python, execute anywhere, every time — clean, consistent, no surprises.
-
-- **Rust-Powered, Python-Enabled**  
-  A lightweight compiled binary for speed and stability, with Python flexibility for scripting project commands.
-
----
-
-## Get Started
-
-- **Install Angreal**  
-  Download a self-contained binary — no dependencies, no setup nightmares.
-
-- **Explore Templates**  
-  Use existing templates or create your own for your team’s unique needs.
-
-- **Automate Your Workflow**  
-  Stop memorizing bash scripts and start building. Angreal handles the details.
-
----
-
-## Why Angreal?
-
-Angreal is Colliery Software’s solution for developers who are tired of tedious project setup and disjointed workflows. Built for the modern craftsman, Angreal brings **standardization, automation, and speed** to project creation and daily development tasks — without the overhead.
-
-Where other tools leave you tangled in boilerplate, Angreal delivers a clean foundation: consistent templates, automated task runners, and a single command-line experience across all your projects.
-
-**Remember by forgetting.** You focus on building — Angreal handles the rest.
-
----
-
-## Built for the Craftsman
-
-Colliery Software believes in tools that work hard and stay out of the way. Angreal is designed for developers who build with their hands, their heads, and their heart — and who demand reliable, simple, and powerful foundations for every project.
-
-Blueprints in hand. Hammer at the ready.  
-[**Get building with Angreal.**](https://angreal.github.io/angreal)
-
+[Angreal on GitHub](https://github.com/angreal/angreal)

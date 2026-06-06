@@ -1,0 +1,16 @@
+---
+title: GraphQLite
+description: An SQLite extension that adds graph storage and Cypher queries to any SQLite database.
+image: ./logo.png
+draft: false
+---
+
+Graph problems do not always justify a graph database. Standing up and operating a dedicated server is a lot of overhead when what you really have is one application that needs to model relationships well. GraphQLite closes that gap by adding graph capabilities directly to SQLite; you get a single-file, zero-configuration, server-less database that also speaks Cypher.
+
+It supports the core of the Cypher query language, including `MATCH`, `CREATE`, `MERGE`, `SET`, `DELETE`, `WITH`, `UNWIND`, and `RETURN`, so you write traversals the same way you would against a full graph engine. A set of graph algorithms is built in, among them PageRank, Louvain community detection, Dijkstra shortest paths, breadth- and depth-first search, and connected components. You can reach it from Python, from Rust, or straight through SQL, and because it is SQLite underneath, it drops into whatever you already run.
+
+Conformance here is measured rather than asserted. GraphQLite runs against the official openCypher Technology Compatibility Kit and currently passes 97.7% of its 3,876 scenarios; the gaps that remain are tracked in the open and concentrate in a few deep areas like timezone-aware arithmetic and nested existential subqueries.
+
+GraphQLite is open source under the MIT license.
+
+[GraphQLite on GitHub](https://github.com/colliery-io/graphqlite)

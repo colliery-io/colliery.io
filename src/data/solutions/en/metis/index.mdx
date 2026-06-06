@@ -1,0 +1,18 @@
+---
+title: Metis
+description: Persistent, structured project management that gives AI coding agents a memory across sessions.
+image: ./metis-dark.png
+draft: false
+---
+
+AI coding agents forget, and not only between sessions; context windows fill, conversations compact, and the plan you agreed on an hour ago is gone along with the reasoning behind it. Metis gives an agent a memory that survives all of that. Work lives in plain Markdown files with YAML frontmatter under a `.metis/` directory, so it outlasts any single session and stays readable in an editor and reviewable in a pull request. A SQLite index sits on top for fast full-text search, but the files are the source of truth and the database is disposable.
+
+Metis is opinionated about how work gets made, not just where it is kept. It follows the Flight Levels method and structures everything top down, from Vision to Initiative to Task, with each level moving through forward-only phases; a task cannot jump from "todo" to "done" without passing through the work in between. That keeps an agent from skipping discovery to get to code. The strategic calls, like the direction of an initiative or how a task should break down, wait for your approval; the routine execution underneath can run on its own.
+
+In practice the agent works a task and keeps its document current as it goes, recording what it changed, what it found, and what is left. If the session ends or the context compacts, the next session reads that task and resumes where the last one stopped. Metis ships as an MCP server and a Claude Code plugin, with an autonomous task loop, contextual skills, and hooks that re-inject project state after a compaction. There is a desktop app with a kanban board for the visual side, a CLI for the terminal, and a tree-sitter code indexer that maps a codebase across Rust, Python, TypeScript, JavaScript, and Go so an agent can find its way around.
+
+The name is Greek; Metis was the Titaness of wisdom and deep counsel, whose judgment Zeus took into himself. A memory that quietly informs better decisions is the idea.
+
+Metis is open source under the Apache 2.0 license.
+
+[Metis on GitHub](https://github.com/colliery-io/metis)

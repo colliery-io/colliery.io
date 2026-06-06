@@ -9,17 +9,11 @@
  */
 import siteDataEn from "./en/siteData.json";
 import navDataEn from "./en/navData.json";
-import faqDataEn from "./en/faqData.json";
-import teamDataEn from "./en/teamData.json";
-import testimonialDataEn from "./en/testimonialData.json";
 
 export const dataTranslations = {
 	en: {
 		siteData: siteDataEn,
 		navData: navDataEn,
-		faqData: faqDataEn,
-		teamData: teamDataEn,
-		testimonialData: testimonialDataEn,
 	},
 	
 } as const;

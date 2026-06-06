@@ -133,22 +133,30 @@ const navConfig: navItem[] = [
 				link: "/solutions/brokkr",
 			},
 			{
+				text: "Cloacina",
+				link: "/solutions/cloacina",
+			},
+			{
+				text: "Metis",
+				link: "/solutions/metis",
+			},
+			{
 				text: "Angreal",
 				link: "/solutions/angreal",
 			},
 			{
-				text: "Cloacina",
-				link: "/solutions/cloacina",
-			}
-			// {
-			// 	text: "Muninn",
-			// 	link: "/solutions/muninn",
-			// },
+				text: "GraphQLite",
+				link: "/solutions/graphqlite",
+			},
+			{
+				text: "fidius",
+				link: "/solutions/fidius",
+			},
+			{
+				text: "CRT",
+				link: "/solutions/crt",
+			},
 		],
-	},
-	{
-		text: "Blog",
-		link: "/blog",
 	},
 	{
 		text: "Contact Us",

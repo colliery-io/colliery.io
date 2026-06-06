@@ -4,16 +4,9 @@ import BaseLayout from "@layouts/BaseLayout.astro";
 
 // components
 import HeroCentered from "@components/Hero/HeroCentered.astro";
-
+import SolutionsGrid from "@components/Solutions/SolutionsGrid.astro";
 import ServiceOfferings from "@components/Services/ServiceOfferings.astro";
-import FeatureCardsMedium from "@components/Feature/FeatureCardsMedium.astro";
-
 import OurValues from "@components/Values/OurValues.astro";
-
-
-
-import FaqAccordions from "@components/Faq/FaqAccordions.astro";
-import FaqCards from "@components/Faq/FaqCards.astro";
 
 // utils
 import { getLocaleFromUrl } from "@js/localeUtils";
@@ -25,23 +18,8 @@ const siteData = getTranslatedData("siteData", currLocale);
 ---
 
 <BaseLayout title={siteData.title} description={siteData.description}>
-	
-	<HeroCentered /> 
+	<HeroCentered />
+	<SolutionsGrid />
 	<ServiceOfferings />
 	<OurValues />
-	
-	<!-- <FeatureSideImage /> -->
-
-	<!-- <TestimonialsSwiperQuotes /> -->
-
-	<!--<FeatureLightboxMarquee /> -->
-	<!-- <FeatureGalleryMarquee /> -->
-	<!-- <FeatureToggleImage /> -->
-
-	<!--<CtaCardSplit /> -->
-	<!-- <CtaCardCenter /> -->
-	<!-- <CtaCenter /> -->
-
-	<!--<FaqAccordions />-->
-	<!-- <FaqCards /> -->
 </BaseLayout>

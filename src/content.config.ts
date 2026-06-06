@@ -47,7 +47,7 @@ const solutionsCollection = defineCollection({
 		z.object({
 			title: z.string(),
 			description: z.string(),
-			image: image(),
+			image: image().optional(),
 			// solutions will be excluded from build if draft is "true"
 			draft: z.boolean().optional(),
 		}),

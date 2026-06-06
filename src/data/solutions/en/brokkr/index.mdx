@@ -1,83 +1,20 @@
 ---
 title: Brokkr
-description: Automate Your Infrastructure, Monitor Your Craft
+description: A control plane for provisioning Kubernetes workloads across clusters dynamically, at runtime.
 draft: false
-image: ./architecture.png
-categories:
-  - product
+image: ./logo-hero.png
 ---
 
+If your cluster state lives in Git and changes on a deploy cadence, you already have the right tools; Argo CD and Flux do that job well, and Brokkr is not trying to replace them. Brokkr is for the other case, where what runs is decided at runtime rather than declared in a repository. Think of a PaaS or SaaS platform where a user picks services from a catalog and starts them on demand, or where every tenant gets its own set of resources stood up and torn down over its lifecycle. That work is dynamic and provisional; it does not fit a model where every change has to flow through a commit.
 
-# Brokkr
+Brokkr is an environment-aware control plane for distributing those workloads across many clusters. The broker holds each running configuration as a "stack" of Kubernetes resources, and you create, update, and remove stacks programmatically through its API as your platform reacts to whatever your users are doing. A lightweight agent in each target cluster polls the broker and applies what it is given; because the agents reach out rather than wait to be reached, target clusters can sit behind firewalls or inside restricted networks and still receive workloads reliably. Each agent reports health and results back, so everything you have provisioned is visible from one place.
 
-**Automate Your Infrastructure. Monitor Your Craft.**
+Routing is done with labels and annotations, so a stack lands on the cluster, or group of clusters, that should run it. Templates with JSON Schema validation let a platform expose a catalog of services and check a user's parameters before anything is instantiated, and health tracking, webhook events, and a full API mean Brokkr sits inside your product rather than beside it.
 
-**Brokkr** is your always-on workshop foreman — managing infrastructure state, watching for drift, and keeping your clusters in line with your desired configuration. Designed for teams that build, scale, and operate real-world systems, Brokkr delivers robust state reconciliation for Kubernetes, driven by code.
+Under the hood it is a Rust workspace. The `brokkr-broker` service runs the API and coordinates distribution; `brokkr-agent` does the polling and applying inside each cluster; shared models and utilities keep the two honest. Helm charts ship for both halves.
 
-[Get Started with Brokkr →](https://github.com/colliery-io/brokkr)
+The name is Norse; Brokkr was the dwarven smith who forged the treasures of the gods to order. The tool does much the same for running services: build what is asked for, put it where it is needed, then clear it away when it is done.
 
----
+Brokkr is available under the Elastic License 2.0. If you want to use it commercially or need help putting it to work, [get in touch](https://colliery.io/contact/).
 
-## Use Cases
-
-- **Declarative Infrastructure Control**  
-  Define your system state in code and let Brokkr enforce it continuously.
-
-- **Continuous Drift Detection**  
-  Identify and correct unintended changes in your systems before they cause downtime.
-
-- **Simplified Operations at Scale**  
-  Empower small teams to manage large clusters with less manual intervention and higher reliability.
-
----
-
-## Key Features
-
-- **Rust-Powered Kubernetes Controller**  
-  High-performance, reliable, and memory-safe infrastructure operator.
-
-- **State-Driven Reconciliation**  
-  Brokkr watches your declared state and makes the actual state match — every time.
-
-- **Lightweight, Extensible Core**  
-  Focused on doing one thing well: maintaining your desired system state with minimal overhead.
-
----
-
-## Get Started
-
-- **Define Your Resources**  
-  Use Brokkr's custom resources to define what your services, agents, or jobs should look like.
-
-- **Run the Controller**  
-  Deploy Brokkr into your cluster and let it take charge of drift detection and correction.
-
-- **Extend with Crates**  
-  Build on Brokkr’s library foundation to add your own logic and operators.
-
----
-
-## Why Brokkr?
-
-In Norse mythology, Brokkr is the smith who forged tools for the gods. In our world, **Brokkr** is the engine that forges reliability into your systems. It’s a durable, developer-first solution for managing infrastructure over time — not just during provisioning.
-
-Where configuration drifts and manual patching lead to entropy, Brokkr brings precision, repeatability, and resilience.
-
----
-
-## Built for the Operator
-
-At Colliery, we build tools that work as hard as the people who use them. Brokkr is made for platform engineers, SREs, and developers who live close to the metal.
-
-It doesn’t just provision. It watches. It corrects. It protects.
-
-**State, enforced. Drift, resolved.**
-
-[ Start Forging with Brokkr → ](https://github.com/colliery-io/brokkr)
-
---- 
-
-## Commercial Use
-
-For commercial entities interested in using Brokkr, please [contact us](https://colliery.io/contact/) for pricing and licensing information. 
-We offer flexible commercial licenses tailored to your organization’s needs.
+[Brokkr on GitHub](https://github.com/colliery-io/brokkr)

@@ -1,53 +1,61 @@
 ---
-/**
- * * About page with various sections including some text, team profiles, and CTA
- * Edit the team member information inside src/config/teamData.json.ts
- */
-import { Icon } from "astro-icon/components";
-
 // main layout
 import BaseLayout from "@layouts/BaseLayout.astro";
 
 // components
-import Profile from "@components/Profile/Profile.astro";
 import Button from "@components/Button/Button.astro";
 import CtaCardSplit from "@components/Cta/CtaCardSplit.astro";
 import Badge from "@components/Badge/Badge.astro";
 
 // utils
 import { getLocaleFromUrl } from "@js/localeUtils";
-import { getTranslatedData } from "@js/translationUtils";
 
-// data
 const currLocale = getLocaleFromUrl(Astro.url);
-const teamData = getTranslatedData("teamData", currLocale);
 ---
 
-<BaseLayout title="About Us" description="All about our super awesome small business team!">
+<BaseLayout
+	title="About"
+	description="Colliery is a small, independent software studio building infrastructure and developer tooling in Rust, mostly in the open."
+>
 	<!-- text section -->
 	<section
 		class="site-container mx-auto mt-16 bg-[url('/assets/pattern-light-big.svg')] bg-center bg-no-repeat py-24 dark:bg-[url('/assets/pattern-dark-big.svg')]"
 	>
-		<div class="mb-16 text-center">
-			<Badge>Team</Badge>
-			<h1 class="h1 mb-4">Our team is the best in the business.</h1>
-			<p class="description mb-8 text-lg md:text-xl">
-				Lorem ipsum dolor sit amet consectetur adipisicing elit. Dicta voluptate molestias fugit.
+		<div class="mb-12 text-center">
+			<Badge>About</Badge>
+			<h1 class="h1 mb-4">Colliery</h1>
+			<p class="description mx-auto max-w-2xl text-lg md:text-xl">
+				A small, independent software studio building infrastructure and developer tooling, mostly
+				in Rust and mostly in the open.
 			</p>
-			<div class="flex justify-center">
-				<Button variant="primary" href={"/contact"}>
-					Contact Us
-				</Button>
-			</div>
 		</div>
 
-		<!-- Team info -->
-		<div class="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-			{
-				teamData.map((member) => (
-					<Profile name={member.name} title={member.title} image={member.image} bio={member.bio} />
-				))
-			}
+		<div
+			class="text-base-600 dark:text-base-300 mx-auto max-w-2xl space-y-6 text-left text-lg leading-relaxed"
+		>
+			<p>
+				Colliery exists because the same kind of problem keeps turning up: the unglamorous
+				machinery that real systems depend on, the parts that have to be correct, observable, and
+				boring in the best sense. That is the work we like, so we went looking for more of it.
+			</p>
+			<p>
+				Most of it ends up as a focused, named project rather than a pitch. A control plane for
+				provisioning Kubernetes workloads on demand; a workflow engine that runs embedded or as a
+				service; a graph layer that lives inside SQLite; a plugin framework built on signed,
+				version-checked ABIs; a memory system that lets AI coding agents resume where they stopped.
+				Some of it is production infrastructure, and some of it, like a GPU-rendered terminal,
+				exists because the craft is its own reason. Each project has its own page.
+			</p>
+			<p>
+				We also take on a small number of consulting engagements, usually when one of these
+				problems shows up inside someone else's system; workflow orchestration, multi-cluster
+				deployment, fitting a graph or a plugin layer into an existing codebase, or getting an
+				AI-assisted workflow to behave. If that sounds like what you are dealing with, get in touch.
+			</p>
+		</div>
+
+		<div class="mt-10 flex justify-center">
+			<Button variant="primary" href="/contact">Get in touch</Button>
 		</div>
 	</section>
 

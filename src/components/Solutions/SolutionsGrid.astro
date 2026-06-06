@@ -1,0 +1,68 @@
+---
+/**
+ * * Homepage grid of the actual projects, pulled from the solutions content collection
+ * so it stays in sync as the lineup changes. Cards link to each project page.
+ */
+
+import { getCollection } from "astro:content";
+
+// components
+import Badge from "@components/Badge/Badge.astro";
+
+// utils
+import { filterCollectionByLanguage } from "@js/localeUtils";
+import { defaultLocale } from "@config/siteSettings.json";
+
+const solutions = await getCollection("solutions", ({ data }) => data.draft !== true);
+const filteredSolutions = filterCollectionByLanguage(solutions, defaultLocale);
+
+// deliberate display order; anything not listed falls to the end
+const order = ["brokkr", "cloacina", "metis", "angreal", "graphqlite", "fidius", "crt"];
+const sortedSolutions = filteredSolutions.sort((a, b) => {
+	const ai = order.indexOf(a.id);
+	const bi = order.indexOf(b.id);
+	return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+});
+---
+
+<section
+	id="our-work"
+	class="bg-[url('/assets/pattern-light.svg')] bg-center bg-no-repeat py-24 md:py-28 dark:bg-[url('/assets/pattern-dark.svg')]"
+>
+	<div class="site-container relative">
+		<div class="mx-auto mb-16 text-center md:max-w-4xl" data-aos="fade-up">
+			<Badge>Our Work</Badge>
+			<h2 class="h2 mb-4">What we've built</h2>
+			<p class="description text-lg text-pretty md:text-xl">
+				Most of what we do ends up as a focused project, built in Rust and released in the open.
+				This is the current shelf.
+			</p>
+		</div>
+		<div id="trigger-work-cards" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			{
+				sortedSolutions.map((solution, idx) => (
+					<a
+						href={`/solutions/${solution.id}`}
+						class="group border-base-200 dark:border-base-800 dark:hover:bg-base-900 block h-full rounded-md border p-6 transition duration-200 hover:bg-white hover:shadow-xl"
+						data-aos="zoom-in"
+						data-aos-delay={0.1 * idx}
+						data-aos-trigger="#trigger-work-cards"
+					>
+						<div class="flex items-baseline justify-between gap-3">
+							<h3 class="text-base-900 dark:text-base-100 text-lg font-bold">
+								{solution.data.title}
+							</h3>
+							<span
+								class="text-primary-500 transition-transform duration-200 group-hover:translate-x-1"
+								aria-hidden="true"
+							>
+								&rarr;
+							</span>
+						</div>
+						<p class="description mt-2">{solution.data.description}</p>
+					</a>
+				))
+			}
+		</div>
+	</div>
+</section>

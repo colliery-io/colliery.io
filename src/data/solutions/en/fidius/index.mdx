@@ -1,0 +1,18 @@
+---
+title: fidius
+description: A Rust plugin framework that turns a trait into a signed, ABI-stable dynamic library.
+image: ./logo.png
+draft: false
+---
+
+Plugin systems in Rust usually mean writing FFI by hand: raw pointers, `extern "C"` shims, manual versioning, and plenty of room to get it subtly wrong. fidius removes that. You define a plugin interface as an ordinary Rust trait, annotate it, and the macro generates the ABI shim, the version hash, and a typed proxy the host calls through. The plugin compiles to a normal dynamic library; the host loads it and calls it as though it were local, with the compiler checking both sides.
+
+A fidius system is three small crates: an interface that holds the trait, a plugin that implements it as a cdylib, and a host that loads and calls it. The CLI scaffolds the first two, so the only code you write is the trait and the `impl`; the FFI in between is generated. Because the ABI is versioned and hash-checked, a host can tell whether a plugin really matches the interface it expects before it calls anything, and an interface can grow over time, gaining optional methods, without breaking the plugins already in the field.
+
+Trust is built in rather than bolted on. Plugin artifacts can be signed and verified with Ed25519, so a host can refuse to load anything it cannot vouch for. Plugins are not limited to Rust either; a Python plugin can satisfy the same Rust trait through the Python bindings.
+
+The name is Roman; Fides was the goddess of trust and good faith, the keeping of one's word. For a system whose whole job is to load someone else's code and be certain of what it is, the fit is hard to improve on.
+
+fidius is open source under the Apache 2.0 license.
+
+[fidius on GitHub](https://github.com/colliery-io/fidius)
