@@ -1,0 +1,20 @@
+---
+title: Muninn
+description: A privacy-first context gateway that explores your codebase with cheap models so Claude only sees what matters.
+image: ./image.png
+draft: false
+---
+
+Coding agents run into the same trilemma over and over. They hallucinate when they cannot see enough of a codebase; sending proprietary code to a cloud provider is often not allowed; and every session starts over, relearning the same project from scratch. Muninn is built to relieve all three at once.
+
+Muninn is a context gateway for agentic coding. Rather than feeding an entire repository to an expensive model, it offloads the work of exploring a codebase to fast, cheap models and then hands the agent only the part that matters. If you are working on a Claude Pro or Max plan, that stretches a token budget a long way; the costly Claude-shaped reasoning stays where you are already paying for it, while the legwork of searching and reading happens cheaply, often on a model running locally.
+
+It plugs into Claude Code through the editor's own extension points, with no traffic interception and no protocol mimicry. A hook fires once per turn: a small router model decides whether the prompt needs exploration, and if it does, a recursive engine runs over the code on whatever cheap or local backend you configured and injects the answer for Claude to use. If anything goes wrong, the hook passes through silently and never blocks your turn. Alongside it, an MCP server exposes two on-demand tools; `search_code` for ranked matches across the working tree, and `query_graph` for callers, callees, and definitions from an indexed code graph. Both share a single local daemon that starts itself when it is first needed.
+
+The backend is yours to choose. Ollama Cloud is the tested default, with Groq and a fully local Ollama daemon also supported, and per-tier configuration so a cheap router can sit in front of a stronger exploration model. Project state lives in a gitignored `.muninn/` directory, so nothing about your code has to leave your machine unless you decide it should.
+
+The name is Norse; Muninn is one of Odin's two ravens, the one whose name means Memory, who flies out over the world each day and returns with what he has seen.
+
+Muninn is open source under the Apache 2.0 license.
+
+[Muninn on GitHub](https://github.com/colliery-io/muninn)
